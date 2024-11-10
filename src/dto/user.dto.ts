@@ -1,4 +1,6 @@
 import { IsString, IsOptional, IsDate, IsPhoneNumber, IsInt, IsPositive, MinLength, MaxLength, Matches } from 'class-validator';
+import { SleepData } from 'src/entities/sleepData/sleepData.entities';
+import { OneToMany } from 'typeorm';
 
 export class UserUpdateDto {
     @IsOptional() // Nếu không thay đổi thì không cần phải có trong request
@@ -46,4 +48,6 @@ export class UserChangePasswordDto {
   
     @IsString()
     confirmPassword: string;
+
+   
 }

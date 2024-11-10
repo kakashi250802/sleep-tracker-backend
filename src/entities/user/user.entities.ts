@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
+import { SleepData } from '../sleepData/sleepData.entities';
 
 @Entity('users')
 export class User {
@@ -31,4 +32,6 @@ export class User {
   
     @Column({ type: 'varchar', nullable: true })
     address?: string; // Trường này không bắt buộc
+    @OneToMany(() => SleepData, sleepData => sleepData.user)
+    sleepData: SleepData[];  // This will allow you to access the user's sleep records
 }
