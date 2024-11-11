@@ -62,6 +62,7 @@ export class AuthService {
     // Chỉnh sửa hàm register để nhận các trường thông tin từ người dùng
     async register(
         email: string,
+        full_name:string,
         phone_number: string,
         password: string,
         birth_date: Date,
@@ -113,6 +114,7 @@ export class AuthService {
             birth_date,
             weight,
             height,
+            full_name,
             gender,
             address,
             created_at: new Date(), // Gán thời gian hiện tại cho trường created_at
@@ -132,7 +134,7 @@ export class AuthService {
     }
     async updateUser(id: number, updateUserDto: UserUpdateDto): Promise<User> {
         const user = await this.userRepository.findOne({ where: { id } });
-    
+        console.log(user);
         if (!user) {
           throw new NotFoundException('User not found');
         }
@@ -153,9 +155,9 @@ export class AuthService {
           }
         }
     
-        // Update user properties
-        Object.assign(user, updateUserDto);
-        return this.userRepository.save(user);
+        const newUserUpdate = {...user,updateUserDto,birth_date: new Date(updateUserDto.birth_date)}
+
+        return this.userRepository.save(newUserUpdate);
       }
         // Change Password Method
   async changePassword(userId: number, changePasswordDto: UserChangePasswordDto): Promise<{ message: string }> {

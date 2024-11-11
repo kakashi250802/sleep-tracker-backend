@@ -6,6 +6,10 @@ export class UserUpdateDto {
     @IsOptional() // Nếu không thay đổi thì không cần phải có trong request
     @IsString()
     email: string;
+
+    @IsOptional() // Nếu không thay đổi thì không cần phải có trong request
+    @IsString()
+    full_name:string;
   
     @IsOptional()
     @IsPhoneNumber('VN')

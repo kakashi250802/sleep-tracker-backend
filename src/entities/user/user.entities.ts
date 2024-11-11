@@ -8,6 +8,9 @@ export class User {
   
     @Column({ type: 'varchar', unique: true, nullable: false })
     email: string;
+
+    @Column({ type: 'varchar', nullable: false })
+    full_name: string;
   
     @Column({ type: 'varchar', unique: true, nullable: false })
     phone_number: string; // Đảm bảo tính duy nhất cho số điện thoại

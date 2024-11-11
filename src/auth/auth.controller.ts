@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Put, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Param, Post, Put, Request, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserChangePasswordDto, UserUpdateDto } from 'src/dto/user.dto';
 import { UserId } from './decorator/user.decorator';
@@ -18,24 +18,31 @@ export class AuthController {
       return this.authService.register(email, phone_number, password, birth_date, weight, height, gender, address);
     }
   // Endpoint to update user information (requires JWT token)
-  @Put('update/:id')
+  @Post('update-user-info')
   @UseGuards(AuthGuard) // Protect this route
   async updateUser(
     @Param('id') id: number,
     @Body() updateUserDto: UserUpdateDto,
-    @UserId() userId: number, // Get userId from the token
+    @Request() req,
   ): Promise<User> {
-    if (id !== userId) {
+    const userId = req.user.sub;
+    console.log(userId);
+    if (!userId) {
       throw new UnauthorizedException('You can only update your own profile');
     }
     return this.authService.updateUser(id, updateUserDto);
   }
   @Post('change-password')
   @UseGuards(AuthGuard) // Protect the endpoint with JWT guard
+  
   async changePassword(
-    @Body() changePasswordDto: UserChangePasswordDto,
-    @Param('userId') userId: number, // Get user ID from the token or pass as a param
+      @Body() changePasswordDto: UserChangePasswordDto,
+      @Request() req,
   ) {
+    const userId = req.user.sub;
+    if (!userId) {
+        throw new UnauthorizedException('You can only update your own user');
+      }
     return this.authService.changePassword(userId, changePasswordDto);
   }
 }
