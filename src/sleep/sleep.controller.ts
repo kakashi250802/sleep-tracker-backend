@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Request, UseGuards } from '@nestjs/common';
 import { SleepService } from './sleep.service';
 import { CreateSleepHeartDto } from './dto/sleepHeart.dto';
 import { CreateSleepTimeDto } from './dto/sleepTime.dto';
@@ -19,5 +19,17 @@ export class SleepController {
     ) {
         const userId = req.user.sub;
       return this.sleepService.processAndSaveData(userId, heartData, sleepData);
+    }
+
+    @Get('get-records/:days')
+    @UseGuards(AuthGuard) // Xác thực JWT
+    async getSleepRecords(
+
+    @Param('days') days: number,
+    @Request() req,
+
+    ) {
+        const userId = req.user.sub;
+      return this.sleepService.getSleepRecords(userId, days);
     }
 }

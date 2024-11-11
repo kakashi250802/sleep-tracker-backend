@@ -67,5 +67,5 @@ export class SleepData {
   @OneToMany(() => SleepHeart, sleepHeart => sleepHeart.sleepData)
   sleepHeart: SleepHeart[];  // This will allow you to access the user's sleep records
   @OneToMany(() => SleepTime, sleepTime => sleepTime.sleepData)
-  sleepTimes: SleepHeart[];  // This will allow you to access the user's sleep records
+  sleepTimes: SleepTime[];  // This will allow you to access the user's sleep records
 }

@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CreateSleepTimeDto } from './dto/sleepTime.dto';
-import { CreateSleepHeartDto } from './dto/sleepHeart.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { SleepData } from 'src/entities/sleepData/sleepData.entities';
 import { SleepHeart } from 'src/entities/sleepHeart/sleepHeart.entities';
 import { SleepTime } from 'src/entities/sleepTime/sleepTime.entities';
+import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { CreateSleepHeartDto } from './dto/sleepHeart.dto';
+import { CreateSleepTimeDto } from './dto/sleepTime.dto';
 
 @Injectable()
 export class SleepService {
@@ -119,13 +119,13 @@ export class SleepService {
         return savedSleepData;
     }
     async getSleepRecords(userId: number, days: number): Promise<SleepData[]> {
-        // Tính toán ngày bắt đầu
+        // Tính toán ngày bắt đầu và kết thúc
         const endDate = new Date(); // Hôm nay
         const startDate = new Date();
         startDate.setDate(endDate.getDate() - days + 1); // Trừ đi số ngày (nếu là 7 ngày thì lấy từ 6 ngày trước và hôm nay)
-    
-        // Truy vấn dữ liệu
-        return await this.sleepDataRepository.find({
+        
+        // Truy vấn dữ liệu SleepData với các liên kết sleepTimes và sleepHeart
+        const records = await this.sleepDataRepository.find({
           where: {
             user_id: userId,
             sleep_start_time: MoreThanOrEqual(startDate),
@@ -134,6 +134,38 @@ export class SleepService {
           order: {
             sleep_start_time: 'ASC', // Sắp xếp theo thời gian bắt đầu giấc ngủ
           },
+          relations: ['sleepTimes', 'sleepHeart'], // Nạp các quan hệ với SleepTime và SleepHeart
         });
+      
+        // Tạo danh sách các ngày từ startDate đến endDate
+        const dateList: string[] = [];
+        let currentDate = new Date(startDate);
+        while (currentDate <= endDate) {
+          dateList.push(currentDate.toISOString().split('T')[0]); // Lưu ngày theo định dạng YYYY-MM-DD
+          currentDate.setDate(currentDate.getDate() + 1); // Tiến tới ngày tiếp theo
+        }
+      
+        // Tạo map từ ngày đến dữ liệu giấc ngủ
+        const recordsMap = records.reduce((acc, record) => {
+          const dateKey = record.sleep_start_time.toISOString().split('T')[0]; // Lấy phần ngày (YYYY-MM-DD)
+          acc[dateKey] = record;
+          return acc;
+        }, {} as Record<string, SleepData>);
+      
+        // Kết hợp các ngày không có dữ liệu với dữ liệu trống
+        const response: SleepData[] = dateList.map(date => {
+          const record = recordsMap[date];
+          if (record) {
+            // Nếu có dữ liệu cho ngày này, trả về dữ liệu gốc
+            return {
+              ...record,
+              sleepTimes: record.sleepTimes || [],
+              sleepHeart: record.sleepHeart || [],
+            };
+          } 
+        });
+      
+        return response;
       }
+
 }
