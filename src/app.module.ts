@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { SleepData } from './entities/sleepData/sleepData.entities';
 import { SleepHeart } from './entities/sleepHeart/sleepHeart.entities';
 import { SleepTime } from './entities/sleepTime/sleepTime.entities';
+import { SleepModule } from './sleep/sleep.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { SleepTime } from './entities/sleepTime/sleepTime.entities';
       entities: [User,SleepData,SleepHeart,SleepTime], // Đảm bảo User entity được bao gồm
       synchronize: true,
     }),
-    AuthModule, // Đảm bảo AuthModule được import
+    AuthModule,
+    SleepModule, // Đảm bảo AuthModule được import
   ],
 })
 export class AppModule {}

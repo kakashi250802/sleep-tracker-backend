@@ -10,11 +10,19 @@ export class SleepHeart {
   @ManyToOne(() => SleepData, (sleepData) => sleepData.sleepHeart, { onDelete: 'CASCADE' })
   sleepData: SleepData;
 
-  @Column({ type: 'float' })
-  value: number;
-  @Column()
-  start_date: Date;
 
-  @Column()
-  end_date: Date;
+  @Column({ type: 'timestamp' })
+  startDate: Date;
+
+  @Column({ type: 'timestamp' })
+  endDate: Date;
+
+  @Column({ type: 'varchar' })
+  sourceId: string;
+
+  @Column({ type: 'varchar' })
+  sourceName: string;
+
+  @Column({ type: 'float' }) // Using float for the value field
+  value: number;
 }

@@ -14,29 +14,58 @@ export class SleepData {
   @Column()
   user_id: number;
 
-  @Column()
-  start_date: Date;
-
-  @Column()
-  end_date: Date;
-
-  @Column('float')
+  @Column({ type: 'float' })
   total_time: number;
 
-  @Column('float')
+  @Column({ type: 'float' })
   total_rem_sleep: number;
 
-  @Column('float')
+  @Column({ type: 'float' })
   total_deep_sleep: number;
 
-  @Column()
+  @Column({ type: 'integer' })
   heart_rate_below_resting: number;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamp' })
   wake_up_time: Date;
 
-  @Column('float')
+  @Column({ type: 'float' })
   heart_rate_avg: number;
+
+  // New fields based on the provided data
+
+  @Column({ type: 'float', nullable: true })
+  avg_heart_rate: number;
+
+  @Column({ type: 'float', nullable: true })
+  core_sleep: number;
+
+  @Column({ type: 'float', nullable: true })
+  core_sleep_percentage: number;
+
+  @Column({ type: 'float', nullable: true })
+  deep_sleep: number;
+
+  @Column({ type: 'float', nullable: true })
+  deep_sleep_percentage: number;
+
+  @Column({ type: 'float', nullable: true })
+  heart_rate_below_resting_percentage: number;
+
+  @Column({ type: 'float', nullable: true })
+  max_heart_rate: number;
+
+  @Column({ type: 'float', nullable: true })
+  min_heart_rate: number;
+
+  @Column({ type: 'float', nullable: true })
+  rem_sleep: number;
+
+  @Column({ type: 'float', nullable: true })
+  rem_sleep_percentage: number;
+
+  @Column({ type: 'float', nullable: true })
+  total_sleep_time: number;
   @OneToMany(() => SleepHeart, sleepHeart => sleepHeart.sleepData)
   sleepHeart: SleepHeart[];  // This will allow you to access the user's sleep records
   @OneToMany(() => SleepTime, sleepTime => sleepTime.sleepData)

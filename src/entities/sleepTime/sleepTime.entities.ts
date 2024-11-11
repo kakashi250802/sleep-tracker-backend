@@ -7,15 +7,26 @@ export class SleepTime {
   @PrimaryGeneratedColumn()
   id: number;
 
+
   @ManyToOne(() => SleepData, (sleepData) => sleepData.sleepTimes, { onDelete: 'CASCADE' })
   sleepData: SleepData;
 
   @Column({ type: 'timestamp' })
-  start_time: Date;
+  startDate: Date;
 
   @Column({ type: 'timestamp' })
-  end_time: Date;
+  endDate: Date;
 
   @Column({ type: 'varchar' })
-  value: string; // Type of sleep (e.g., "light", "deep", "rem")
+  sourceId: string;
+
+  @Column({ type: 'varchar' })
+  sourceName: string;
+
+  @Column({
+    type: 'enum',
+    enum: ['AWAKE', 'INBED', 'REM', 'CORE', 'DEEP'],
+    default: 'AWAKE',
+  })
+  value: 'AWAKE' | 'INBED' | 'REM' | 'CORE' | 'DEEP';
 }
