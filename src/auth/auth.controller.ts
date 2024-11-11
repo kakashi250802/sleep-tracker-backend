@@ -14,8 +14,8 @@ export class AuthController {
     }
     @Post('register')
     async register(@Body() body: any) {
-      const { email, phone_number, password, birth_date, weight, height, gender, address } = body;
-      return this.authService.register(email, phone_number, password, birth_date, weight, height, gender, address);
+      const { email,    full_name, phone_number, password, birth_date, weight, height, gender, address } = body;
+      return this.authService.register(email,full_name, phone_number, password, birth_date, weight, height, gender, address);
     }
   // Endpoint to update user information (requires JWT token)
   @Post('update-user-info')
