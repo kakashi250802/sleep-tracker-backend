@@ -7,6 +7,9 @@ import { SleepData } from './entities/sleepData/sleepData.entities';
 import { SleepHeart } from './entities/sleepHeart/sleepHeart.entities';
 import { SleepTime } from './entities/sleepTime/sleepTime.entities';
 import { SleepModule } from './sleep/sleep.module';
+import { SleepReport } from './entities/sleepReport/sleepReport.entities';
+import { SleepReportsService } from './sleep-reports/sleep-reports.service';
+import { SleepReportsModule } from './sleep-reports/sleep-reports.module';
 
 @Module({
   imports: [
@@ -20,11 +23,13 @@ import { SleepModule } from './sleep/sleep.module';
       username: 'postgres',
       password: '1234',
       database: 'sleep_tracker',
-      entities: [User,SleepData,SleepHeart,SleepTime], // Đảm bảo User entity được bao gồm
+      entities: [User,SleepData,SleepHeart,SleepTime,SleepReport], // Đảm bảo User entity được bao gồm
       synchronize: true,
     }),
     AuthModule,
     SleepModule, // Đảm bảo AuthModule được import
+    SleepReportsModule
   ],
+
 })
 export class AppModule {}
