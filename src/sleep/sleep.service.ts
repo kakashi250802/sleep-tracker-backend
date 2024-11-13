@@ -38,50 +38,57 @@ export class SleepService {
         if (!sleepData || sleepData.length === 0) {
             throw new BadRequestException('sleepData không được trống');
         }
-
+    
         // Lấy thời gian bắt đầu của giấc ngủ từ bản ghi đầu tiên
         const sleepStartTime = new Date(sleepData[0].startDate);
-
         // Lấy thời gian thức dậy từ bản ghi cuối cùng
         const wakeUpTime = new Date(sleepData[sleepData.length - 1].endDate);
-
-        const existingSleepData = await this.sleepDataRepository.findOne({
+    
+        // Kiểm tra bản ghi giấc ngủ đã tồn tại
+        let existingSleepData = await this.sleepDataRepository.findOne({
             where: {
                 sleep_start_time: sleepStartTime,
                 wake_up_time: wakeUpTime,
             },
+            relations: ['sleepTimes', 'sleepHeart', 'report'],
+
         });
-
+    
         if (existingSleepData) {
-            throw new BadRequestException('Bản ghi với sleep_start_time và wake_up_time này đã tồn tại');
-        }
+            // Gọi API để lấy điểm giấc ngủ cho bản ghi đã tồn tại
+    
+            return {
+                dataSleep: existingSleepData,
 
+            };
+        }
+    
         // Tính toán nhịp tim từ heartData
         const avgHeartRate = heartData.reduce((sum, h) => sum + h.value, 0) / heartData.length;
         const maxHeartRate = Math.max(...heartData.map(h => h.value));
         const minHeartRate = Math.min(...heartData.map(h => h.value));
-
-        // Tính toán tổng thời gian giấc ngủ (theo đơn vị phút)
+    
+        // Tính toán tổng thời gian giấc ngủ (đơn vị phút)
         const totalSleepTime = sleepData.reduce((sum, s) => {
             const start = new Date(s.startDate).getTime();
             const end = new Date(s.endDate).getTime();
             return sum + (end - start) / (1000 * 60); // Chuyển đổi thời gian từ mili giây sang phút
         }, 0);
-
-        // Tính toán các giai đoạn giấc ngủ (core, deep, rem) từ sleepData
+    
+        // Tính toán các giai đoạn giấc ngủ
         const coreSleep = sleepData.filter(s => s.value === 'CORE').length * (totalSleepTime / sleepData.length);
         const deepSleep = sleepData.filter(s => s.value === 'DEEP').length * (totalSleepTime / sleepData.length);
         const remSleep = sleepData.filter(s => s.value === 'REM').length * (totalSleepTime / sleepData.length);
-
+    
         // Tính tỷ lệ phần trăm các giai đoạn giấc ngủ
         const coreSleepPercentage = (coreSleep / totalSleepTime) * 100;
         const deepSleepPercentage = (deepSleep / totalSleepTime) * 100;
         const remSleepPercentage = (remSleep / totalSleepTime) * 100;
-
-        // Tính phần trăm nhịp tim dưới mức nghỉ (có thể điều chỉnh dựa trên dữ liệu)
+    
+        // Tính phần trăm nhịp tim dưới mức nghỉ
         const heartRateBelowRestingPercentage = heartData.filter(h => h.value < avgHeartRate).length / heartData.length * 100;
-
-        // Tạo bản ghi giấc ngủ
+    
+        // Tạo bản ghi giấc ngủ mới
         const sleepRecord = this.sleepDataRepository.create({
             user_id: userId,
             total_time: totalSleepTime,
@@ -91,7 +98,6 @@ export class SleepService {
             wake_up_time: wakeUpTime,
             sleep_start_time: sleepStartTime,
             heart_rate_avg: avgHeartRate,
-            avg_heart_rate: avgHeartRate,
             core_sleep: coreSleep,
             core_sleep_percentage: coreSleepPercentage,
             deep_sleep: deepSleep,
@@ -101,59 +107,51 @@ export class SleepService {
             rem_sleep: remSleep,
             rem_sleep_percentage: remSleepPercentage,
         });
-
+    
         const savedSleepData = await this.sleepDataRepository.save(sleepRecord);
-
+    
         // Lưu dữ liệu nhịp tim
-        const heartEntities = heartData.map(h => {
-            return this.sleepHeartRepository.create({
-                ...h,
-                sleepData: savedSleepData,
-            });
-        });
+        const heartEntities = heartData.map(h => this.sleepHeartRepository.create({ ...h, sleepData: savedSleepData }));
         await this.sleepHeartRepository.save(heartEntities);
-
+    
         // Lưu dữ liệu thời gian ngủ
-        const sleepEntities = sleepData.map(s => {
-            return this.sleepTimeRepository.create({
-                ...s,
-                sleepData: savedSleepData,
-            });
-        });
+        const sleepEntities = sleepData.map(s => this.sleepTimeRepository.create({ ...s, sleepData: savedSleepData }));
         await this.sleepTimeRepository.save(sleepEntities);
-
-        // Gọi API để lấy điểm giấc ngủ
-        // Gọi API để lấy điểm giấc ngủ
+    
+        // Gọi API để lấy điểm giấc ngủ cho bản ghi mới
         const predictionData = {
-            "REM SLEEP": remSleepPercentage / 100, // Chuyển đổi sang tỷ lệ
-            "DEEP SLEEP": deepSleepPercentage / 100, // Chuyển đổi sang tỷ lệ
-            "HEART RATE BELOW RESTING": heartRateBelowRestingPercentage / 100, // Tỷ lệ
+            "REM SLEEP": remSleepPercentage / 100,
+            "DEEP SLEEP": deepSleepPercentage / 100,
+            "HEART RATE BELOW RESTING": heartRateBelowRestingPercentage / 100,
             "MINUTES of Sleep": totalSleepTime,
         };
-
+    
         const sleepScoreResponse = await axios.post('http://127.0.0.1:5000/predict', predictionData);
         const sleepScore = sleepScoreResponse.data.predictions[0]?.score;
         const sleepQuality: SleepQuality = sleepScoreResponse.data.predictions[0]?.quality;
+    
         // Lưu kết quả sleep score vào bảng sleep_report
         if (sleepScore != null) {
             const sleepReport = this.sleepReportRepository.create({
                 user: { id: userId },
                 sleepData: { id: savedSleepData.id },
-                report_date: sleepStartTime.toISOString().split('T')[0], // Định dạng ngày
+                report_date: sleepStartTime.toISOString().split('T')[0],
                 sleep_quality: sleepQuality,
                 score: sleepScore,
             });
-
+    
             await this.sleepReportRepository.save(sleepReport);
         }
-
+    
         return {
-            dataSleep: savedSleepData, dataPredict: {
+            dataSleep: savedSleepData,
+            dataPredict: {
                 sleepScore,
-                sleepQuality
-            }
+                sleepQuality,
+            },
         };
     }
+    
     async getSleepRecords(userId: number, days: number) {
         // Tính toán ngày bắt đầu và kết thúc
         const endDate = new Date(); // Hôm nay
@@ -239,5 +237,4 @@ export class SleepService {
     
         return response;
     }
-    
 }
