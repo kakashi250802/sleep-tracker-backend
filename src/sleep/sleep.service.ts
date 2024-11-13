@@ -199,5 +199,45 @@ export class SleepService {
 
         return response;
     }
-
+    async getSleepRecordByDate(userId: number, startDate: Date, endDate: Date) {
+        // Truy vấn dữ liệu SleepData với các liên kết sleepTimes và sleepHeart
+        const records = await this.sleepDataRepository.find({
+            where: {
+                user_id: userId,
+                sleep_start_time: MoreThanOrEqual(startDate),
+                wake_up_time: LessThanOrEqual(endDate),
+            },
+            order: {
+                sleep_start_time: 'ASC', // Sắp xếp theo thời gian bắt đầu giấc ngủ
+            },
+            relations: ['sleepTimes', 'sleepHeart', 'report'], // Nạp các quan hệ với SleepTime và SleepHeart
+        });
+    
+        // Tạo danh sách các ngày từ startDate đến endDate
+        const dateList: string[] = [];
+        let currentDate = new Date(startDate);
+        while (currentDate <= endDate) {
+            dateList.push(currentDate.toISOString().split('T')[0]); // Lưu ngày theo định dạng YYYY-MM-DD
+            currentDate.setDate(currentDate.getDate() + 1); // Tiến tới ngày tiếp theo
+        }
+    
+        // Tạo map từ ngày đến dữ liệu giấc ngủ
+        const recordsMap = records.reduce((acc, record) => {
+            const dateKey = record.sleep_start_time.toISOString().split('T')[0]; // Lấy phần ngày (YYYY-MM-DD)
+            acc[dateKey] = record;
+            return acc;
+        }, {} as Record<string, SleepData>);
+    
+        // Kết hợp các ngày không có dữ liệu với dữ liệu trống
+        const response = dateList.map(date => {
+            const record = recordsMap[date];
+            if (record) {
+                // Nếu có dữ liệu cho ngày này, trả về dữ liệu gốc
+                return record;
+            }
+        });
+    
+        return response;
+    }
+    
 }

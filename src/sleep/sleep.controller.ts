@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Request, UseGuards } from '@nestjs/common';
 import { SleepService } from './sleep.service';
 import { CreateSleepHeartDto } from './dto/sleepHeart.dto';
 import { CreateSleepTimeDto } from './dto/sleepTime.dto';
@@ -31,5 +31,24 @@ export class SleepController {
     ) {
         const userId = req.user.sub;
       return this.sleepService.getSleepRecords(userId, days);
+    }
+
+
+    @Get('get-records-by-date')
+    @UseGuards(AuthGuard) // Xác thực JWT
+    async getSleepRecordByDate(
+    
+        @Query('startDate') startDate: string,
+        @Query('endDate') endDate: string,
+        @Request() req, 
+
+    ) {
+        const userId = req.user.sub;
+        console.log(startDate,endDate);
+        const start = new Date(startDate);
+        start.setHours(12, 0, 0, 0)
+        const end = new Date(endDate);
+        end.setHours(12, 0, 0, 0)
+      return this.sleepService.getSleepRecordByDate(userId, start, end);
     }
 }
