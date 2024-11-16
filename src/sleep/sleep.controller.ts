@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Post, Query, Request, UseGuards } from '@
 import { SleepService } from './sleep.service';
 import { CreateSleepHeartDto } from './dto/sleepHeart.dto';
 import { CreateSleepTimeDto } from './dto/sleepTime.dto';
-import { AuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { AuthGuard } from '../auth/guard/jwt-auth.guard';
 
 @Controller('sleep')
 export class SleepController {

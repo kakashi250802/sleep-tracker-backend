@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SleepReportsService } from './sleep-reports.service';
-import { SleepReport } from 'src/entities/sleepReport/sleepReport.entities';
-import { SleepData } from 'src/entities/sleepData/sleepData.entities';
+import { SleepReport } from '../entities/sleepReport/sleepReport.entities';
+import { SleepData } from '../entities/sleepData/sleepData.entities';
 
 
 @Module({

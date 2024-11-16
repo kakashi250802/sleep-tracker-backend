@@ -1,15 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SleepData } from 'src/entities/sleepData/sleepData.entities';
-import { SleepHeart } from 'src/entities/sleepHeart/sleepHeart.entities';
-import { SleepTime } from 'src/entities/sleepTime/sleepTime.entities';
+import { SleepData } from '../entities/sleepData/sleepData.entities';
+import { SleepHeart } from '../entities/sleepHeart/sleepHeart.entities';
+import { SleepTime } from '../entities/sleepTime/sleepTime.entities';
 import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { CreateSleepHeartDto } from './dto/sleepHeart.dto';
 import { CreateSleepTimeDto } from './dto/sleepTime.dto';
 import axios from 'axios'; // Import axios for API calls
-import { SleepReport } from 'src/entities/sleepReport/sleepReport.entities';
-import { User } from 'src/entities/user/user.entities';
-import { SleepQuality } from 'src/dto/sleepReport.dto';
+import { SleepReport } from '../entities/sleepReport/sleepReport.entities';
+import { User } from '../entities/user/user.entities';
+import { SleepQuality } from '../dto/sleepReport.dto';
 
 @Injectable()
 export class SleepService {

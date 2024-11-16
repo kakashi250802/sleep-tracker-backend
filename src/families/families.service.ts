@@ -1,11 +1,11 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isUUID } from 'class-validator';
-import { CreateInvitationDto } from 'src/dto/families.dto';
-import { Families } from 'src/entities/families/families.entities';
-import { FamilyInvitation } from 'src/entities/familyInvitations/familyInvitations.entity';
-import { User } from 'src/entities/user/user.entities';
-import { UserFamilies } from 'src/entities/userFamilies/userFamilies.entity';
+import { CreateInvitationDto } from '../dto/families.dto';
+import { Families } from '../entities/families/families.entities';
+import { FamilyInvitation } from '../entities/familyInvitations/familyInvitations.entity';
+import { User } from '../entities/user/user.entities';
+import { UserFamilies } from '../entities/userFamilies/userFamilies.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()

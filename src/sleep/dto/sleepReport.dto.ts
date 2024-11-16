@@ -1,5 +1,5 @@
 import { IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional } from "class-validator";
-import { SleepQuality } from "src/dto/sleepReport.dto";
+import { SleepQuality } from "../../dto/sleepReport.dto";
 
 export class CreateSleepReportDto {
     @IsNotEmpty()

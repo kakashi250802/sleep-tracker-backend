@@ -3,7 +3,7 @@ import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Repository } from 'typeorm';
-import { User } from 'src/entities/user/user.entities';
+import { User } from '../entities/user/user.entities';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { ConflictException, BadRequestException, UnauthorizedException, NotFoundException } from '@nestjs/common';
@@ -124,4 +124,5 @@ describe('AuthService', () => {
             });
         });
     });
+    
 });

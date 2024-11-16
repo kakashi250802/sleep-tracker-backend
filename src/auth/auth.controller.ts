@@ -1,8 +1,8 @@
 import { Body, Controller, Param, Post, Put, Request, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserChangePasswordDto, UserUpdateDto } from 'src/dto/user.dto';
+import { UserChangePasswordDto, UserUpdateDto } from '../dto/user.dto';
 import { UserId } from './decorator/user.decorator';
-import { User } from 'src/entities/user/user.entities';
+import { User } from '../entities/user/user.entities';
 import { AuthGuard } from './guard/jwt-auth.guard';
 
 @Controller('auth')

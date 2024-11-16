@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SleepReport } from 'src/entities/sleepReport/sleepReport.entities';
-import { UpdateSleepReportDto } from 'src/sleep/dto/sleepReport.dto';
+import { SleepReport } from '../entities/sleepReport/sleepReport.entities';
+import { UpdateSleepReportDto } from '../sleep/dto/sleepReport.dto';
 import { Repository } from 'typeorm';
 
 

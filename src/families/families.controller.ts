@@ -1,9 +1,9 @@
 import { Body, Controller, Delete, Get, NotFoundException, Param, Post, Put, Request, UseGuards } from '@nestjs/common';
-import { CreateInvitationDto } from 'src/dto/families.dto';
-import { Families } from 'src/entities/families/families.entities';
-import { FamilyInvitation } from 'src/entities/familyInvitations/familyInvitations.entity';
+import { CreateInvitationDto } from '../dto/families.dto';
+import { Families } from '../entities/families/families.entities';
+import { FamilyInvitation } from '../entities/familyInvitations/familyInvitations.entity';
 import { FamiliesService } from './families.service';
-import { AuthGuard } from 'src/auth/guard/jwt-auth.guard';
+import { AuthGuard } from '../auth/guard/jwt-auth.guard';
 
 @Controller('families')
 export class FamiliesController {

@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
 import { SleepReportsService } from './sleep-reports.service';
-import { SleepReport } from 'src/entities/sleepReport/sleepReport.entities';
-import { UpdateSleepReportDto } from 'src/sleep/dto/sleepReport.dto';
+import { SleepReport } from '../entities/sleepReport/sleepReport.entities';
+import { UpdateSleepReportDto } from '../sleep/dto/sleepReport.dto';
 
 
 @Controller('sleep-reports')

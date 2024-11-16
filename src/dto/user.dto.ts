@@ -1,5 +1,5 @@
 import { IsString, IsOptional, IsDate, IsPhoneNumber, IsInt, IsPositive, MinLength, MaxLength, Matches } from 'class-validator';
-import { SleepData } from 'src/entities/sleepData/sleepData.entities';
+import { SleepData } from '../entities/sleepData/sleepData.entities';
 import { OneToMany } from 'typeorm';
 
 export class UserUpdateDto {

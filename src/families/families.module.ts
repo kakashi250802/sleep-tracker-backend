@@ -3,15 +3,15 @@ import { FamiliesService } from './families.service';
 import { FamiliesController } from './families.controller';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SleepData } from 'src/entities/sleepData/sleepData.entities';
-import { SleepHeart } from 'src/entities/sleepHeart/sleepHeart.entities';
-import { SleepTime } from 'src/entities/sleepTime/sleepTime.entities';
-import { SleepReport } from 'src/entities/sleepReport/sleepReport.entities';
-import { User } from 'src/entities/user/user.entities';
-import { Families } from 'src/entities/families/families.entities';
-import { UserFamilies } from 'src/entities/userFamilies/userFamilies.entity';
-import { FamilyInvitation } from 'src/entities/familyInvitations/familyInvitations.entity';
-import { AuthModule } from 'src/auth/auth.module';
+import { SleepData } from '../entities/sleepData/sleepData.entities';
+import { SleepHeart } from '../entities/sleepHeart/sleepHeart.entities';
+import { SleepTime } from '../entities/sleepTime/sleepTime.entities';
+import { SleepReport } from '../entities/sleepReport/sleepReport.entities';
+import { User } from '../entities/user/user.entities';
+import { Families } from '../entities/families/families.entities';
+import { UserFamilies } from '../entities/userFamilies/userFamilies.entity';
+import { FamilyInvitation } from '../entities/familyInvitations/familyInvitations.entity';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
     imports: [ ConfigModule,

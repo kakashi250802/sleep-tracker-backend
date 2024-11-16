@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
 import { SleepData } from '../sleepData/sleepData.entities';
-import { SleepQuality } from 'src/dto/sleepReport.dto';
+import { SleepQuality } from '../../dto/sleepReport.dto';
 import { User } from '../user/user.entities';
 
 @Entity('sleep_reports')
