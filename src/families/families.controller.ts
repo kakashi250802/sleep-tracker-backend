@@ -18,6 +18,23 @@ export class FamiliesController {
   }
 
     // Gửi lời mời tham gia gia đình
+    @Get('info')
+    @UseGuards(AuthGuard) // Xác thực JWT
+    async getFamilyInfo(
+     @Request() req
+    ) {
+        try {
+            const userId = req.user.sub;
+            const familyInfo = await this.familiesService.getFamilyInfoByUserId(userId);
+            return { success: true, data: familyInfo };
+          } catch (error) {
+            if (error instanceof NotFoundException) {
+              return { success: false, message: error.message };
+            }
+            throw error;
+          }
+    }
+    // Gửi lời mời tham gia gia đình
     @Post('invite')
     @UseGuards(AuthGuard) // Xác thực JWT
     async sendInvitation(

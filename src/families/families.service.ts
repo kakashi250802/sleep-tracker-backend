@@ -22,9 +22,21 @@ export class FamiliesService {
     
         @InjectRepository(FamilyInvitation)
         private familyInvitationRepository: Repository<FamilyInvitation>,
-    ) {
+    ) {}
 
-    }
+    async getFamilyInfoByUserId(userId: number) {
+        const userFamily = await this.userFamiliesRepository.findOne({
+          where: {user: {id: userId}  },
+          relations: ['family'],
+        });
+    
+        if (!userFamily) {
+          throw new NotFoundException('User is not associated with any family.');
+        }
+    
+        return userFamily.family; // Trả về thông tin gia đình
+      }
+
      // 1. Tạo gia đình mới
     async createFamily(userId: number, familyName: string): Promise<Families> {
         const user = await this.userRepository.findOne({
