@@ -68,4 +68,32 @@ export class FamiliesController {
   ) {
     return this.familiesService.deleteInvitation(invitationId);
   }
+  // Rời gia đình
+  @Post('leave')
+  @UseGuards(AuthGuard)
+  async leaveFamily(@Body('familyId') familyId: string, @Request() req) {
+    const userId = req.user.sub;  // Lấy userId từ JWT
+    console.log(familyId);
+    return this.familiesService.leaveFamily(userId, familyId);
+  }
+
+  // Xóa thành viên khỏi gia đình (Chỉ admin)
+  @Post('members/remove')
+  @UseGuards(AuthGuard)
+  async removeMember(
+    @Body('familyId') familyId: string,
+    @Body('userId') userId: number,
+    @Request() req,
+  ) {
+    const adminId = req.user.sub;  // Lấy adminId từ JWT
+    return this.familiesService.removeMember(adminId, familyId, userId);
+  }
+
+  // Xóa gia đình (Chỉ admin)
+  @Post('delete')
+  @UseGuards(AuthGuard)
+  async deleteFamily(@Body('familyId') familyId: string, @Request() req) {
+    const adminId = req.user.sub;  // Lấy adminId từ JWT
+    return this.familiesService.deleteFamily(adminId, familyId);
+  }
 }

@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { isUUID } from 'class-validator';
 import { CreateInvitationDto } from 'src/dto/families.dto';
 import { Families } from 'src/entities/families/families.entities';
 import { FamilyInvitation } from 'src/entities/familyInvitations/familyInvitations.entity';
@@ -143,17 +144,24 @@ export class FamiliesService {
     // 3. Xác nhận lời mời gia đình
     async acceptInvitation(invitationId: string) {
         const invitation = await this.familyInvitationRepository.findOne({
-            where: { id: invitationId , status :'pending' },
+            where: { id: invitationId, status: 'pending' },
             relations: ['receiver', 'family'],
-          });
+        });
         if (!invitation) throw new NotFoundException('Invitation not found');
-
+    
         invitation.status = 'accepted';
         await this.familyInvitationRepository.save(invitation);
-
+    
         // Thêm người dùng vào gia đình
         await this.addMemberToFamily(invitation.receiver.id, invitation.family.id, 'member');
-
+    
+        // Xóa các lời mời khác tới người dùng này cho cùng gia đình
+        await this.familyInvitationRepository.delete({
+            receiver: { id: invitation.receiver.id },
+            family: { id: invitation.family.id },
+            status: 'pending',
+        });
+    
         return { message: 'Invitation accepted and receiver added to the family' };
     }
 
@@ -212,4 +220,103 @@ export class FamiliesService {
             }))
           };
     }
+    async leaveFamily(userId: number, familyId: string): Promise<any> {
+        // Kiểm tra xem gia đình có tồn tại không
+
+        if (!isUUID(familyId)) {
+            throw new NotFoundException('Family not found');
+        }
+        const family = await this.familiesRepository.findOne({
+          where: { id: familyId },
+        });
+
+
+        if (!family) {
+          throw new NotFoundException('Family not found');
+        }
+      
+        // Kiểm tra người dùng có phải là admin không
+        const userFamily = await this.userFamiliesRepository.findOne({
+          where: { user: { id: userId }, family: { id: familyId } },
+          relations: ['user', 'family'],
+        });
+      
+        if (!userFamily) {
+          throw new NotFoundException('User is not a member of this family');
+        }
+      
+        // Nếu người dùng là admin, không cho phép rời gia đình
+        if (userFamily.role === 'admin') {
+          throw new BadRequestException('Admin cannot leave the family');
+        }
+      
+        // Xóa người dùng khỏi gia đình
+        await this.userFamiliesRepository.remove(userFamily);
+      
+        return { message: 'Successfully left the family' };
+      }
+
+  // Xóa thành viên khỏi gia đình (Chỉ Admin có quyền)
+  async removeMember(adminId: number, familyId: string, userId: number): Promise<any> {
+    const family = await this.familiesRepository.findOne({
+      where: { id: familyId },
+      relations: ['members','members.user'],
+    });
+
+    if (!family) {
+      throw new NotFoundException('Family not found');
+    }
+    if (Array.isArray(family.members)) {
+        const isAdmin = family.members.some(
+          (member) => member.user && member.user.id === adminId && member.role === 'admin',
+        );
+        // Tiến hành xử lý tiếp nếu isAdmin là true
+        if (isAdmin) {
+            const userFamily = await this.userFamiliesRepository.findOne({
+                where: { user: { id: userId }, family: { id: familyId } },
+              });
+          
+              if (!userFamily) {
+                throw new NotFoundException('User is not a member of this family');
+              }
+          
+              await this.userFamiliesRepository.remove(userFamily);
+        } else {
+            throw new ForbiddenException('Only admin can remove members');
+
+        }
+      } else {
+        throw new BadRequestException('Invalid members data');
+      }
+
+    // Kiểm tra xem có phải là thành viên của gia đình và có quyền admin không
+
+    return { message: 'Member removed successfully' };
+  }
+
+  // Xóa gia đình (Chỉ Admin có quyền)
+  async deleteFamily(adminId: number, familyId: string): Promise<any> {
+    const family = await this.familiesRepository.findOne({
+      where: { id: familyId },
+      relations: ['members','members.user'],
+    });
+
+    if (!family) {
+      throw new NotFoundException('Family not found');
+    }
+
+    // Kiểm tra quyền admin
+    const isAdmin = family.members.some(
+      (member) => member.user.id === adminId && member.role === 'admin',
+    );
+
+    if (!isAdmin) {
+      throw new ForbiddenException('Only admin can delete the family');
+    }
+
+    await this.familiesRepository.remove(family);
+
+    return { message: 'Family deleted successfully' };
+  }
+    
 }
