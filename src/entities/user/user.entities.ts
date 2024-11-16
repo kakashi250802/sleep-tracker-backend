@@ -1,6 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany, OneToOne } from 'typeorm';
 import { SleepData } from '../sleepData/sleepData.entities';
 import { SleepReport } from '../sleepReport/sleepReport.entities';
+import { FamilyInvitation } from '../familyInvitations/familyInvitations.entity';
+import { UserFamilies } from '../userFamilies/userFamilies.entity';
 
 @Entity('users')
 export class User {
@@ -40,4 +42,20 @@ export class User {
     sleepData: SleepData[];  // This will allow you to access the user's sleep records
     @OneToMany(() => SleepReport, (sleepReport) => sleepReport.user)
     sleepReports: SleepReport[];
+
+    // Lời mời mà người dùng đã gửi
+    @OneToMany(() => FamilyInvitation, invitation => invitation.sender)
+    sentInvitations: FamilyInvitation[];
+
+    // Lời mời mà người dùng đã nhận
+    @OneToMany(() => FamilyInvitation, invitation => invitation.receiver)
+    receivedInvitations: FamilyInvitation[];
+    // Quan hệ 1-1 với UserFamilies, theo dõi gia đình của người dùng
+    @OneToOne(() => UserFamilies, userFamily => userFamily.user)
+    userFamily: UserFamilies;
+
+    @CreateDateColumn()
+    created_date: Date;
+    @CreateDateColumn()
+    updated_date: Date;
 }

@@ -1,5 +1,5 @@
 // src/sleep/sleep.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany, OneToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany, OneToOne, CreateDateColumn } from 'typeorm';
 import { User } from '../user/user.entities';
 import { SleepHeart } from '../sleepHeart/sleepHeart.entities';
 import { SleepTime } from '../sleepTime/sleepTime.entities';
@@ -71,4 +71,8 @@ export class SleepData {
   sleepTimes: SleepTime[];  // This will allow you to access the user's sleep records
   @OneToOne(() => SleepReport, (sleepReport) => sleepReport.sleepData)
   report: SleepReport;
+  @CreateDateColumn()
+  created_date: Date;
+  @CreateDateColumn()
+  updated_date: Date;
 }
