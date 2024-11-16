@@ -29,12 +29,11 @@ export class FamiliesService {
           where: {user: {id: userId}  },
           relations: ['family'],
         });
-    
         if (!userFamily) {
           throw new NotFoundException('User is not associated with any family.');
         }
-    
-        return userFamily.family; // Trả về thông tin gia đình
+        const response ={...userFamily.family, userRole: userFamily?.role }
+        return response; // Trả về thông tin gia đình
       }
 
      // 1. Tạo gia đình mới
