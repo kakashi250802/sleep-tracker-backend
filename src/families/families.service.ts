@@ -208,9 +208,9 @@ export class FamiliesService {
             where: { id: familyId },
             relations: ['members', 'members.user'], // Lấy thông tin user của các thành viên
           });
-          const isMember = family.members.some(member => member.user.id === userId);
+          const member = family.members.find(member => member.user.id === userId);
         
-          if (!isMember) {
+          if (!member) {
             throw new ForbiddenException('User is not a member of the family');
           }
           if (!family) {
@@ -221,6 +221,7 @@ export class FamiliesService {
           return {
             familyId: family.id,
             familyName: family.name,
+            yourRole: member?.role,
             members: family.members.map(member => ({
               userId: member.user.id,
               fullName: member?.user?.full_name,
