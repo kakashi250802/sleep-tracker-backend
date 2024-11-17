@@ -38,9 +38,9 @@ export class SleepController {
     @UseGuards(AuthGuard) // Xác thực JWT
     async getSleepRecordByDate(
     
-        @Query('userId') userId: number,
-        @Query('startDate') startDate: string,
-        @Query('endDate') endDate: string,
+        @Body('userId') userId: number,
+        @Body('startDate') startDate: string,
+        @Body('endDate') endDate: string,
         @Request() req, 
 
     ) {
