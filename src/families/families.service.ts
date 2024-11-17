@@ -6,7 +6,7 @@ import { Families } from '../entities/families/families.entities';
 import { FamilyInvitation } from '../entities/familyInvitations/familyInvitations.entity';
 import { User } from '../entities/user/user.entities';
 import { UserFamilies } from '../entities/userFamilies/userFamilies.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 @Injectable()
 export class FamiliesService {
@@ -25,16 +25,43 @@ export class FamiliesService {
     ) {}
 
     async getFamilyInfoByUserId(userId: number) {
+        // Tìm thông tin gia đình của người dùng
         const userFamily = await this.userFamiliesRepository.findOne({
-          where: {user: {id: userId}  },
-          relations: ['family'],
+            where: { user: { id: userId } },
+            relations: ['family'],
         });
         if (!userFamily) {
-          throw new NotFoundException('User is not associated with any family.');
+            throw new NotFoundException('User is not associated with any family.');
         }
-        const response ={...userFamily.family, userRole: userFamily?.role }
-        return response; // Trả về thông tin gia đình
-      }
+    
+        // Lấy các lời mời có trạng thái 'pending' hoặc 'rejected'
+        const invitations = await this.familyInvitationRepository.find({
+            where: {
+                receiver: { id: userId },
+                status: In(['pending', 'rejected']), // Lọc lời mời theo trạng thái
+            },
+            relations: ['sender', 'family'],
+        });
+    
+        // Trả về thông tin gia đình cùng các lời mời liên quan
+        const response = {
+            family: {
+                ...userFamily.family,
+                userRole: userFamily?.role,
+            },
+            invitations: invitations.map(invitation => ({
+                invitationId: invitation.id,
+                senderName: invitation.sender.full_name,
+                senderId: invitation.sender.id,
+                familyId: invitation.family.id,
+                familyName: invitation.family.name,
+                status: invitation.status,
+                createdDate: invitation.created_date,
+            })),
+        };
+    
+        return response;
+    }
     async getOrganizationInvitations(familyId: string) {
     // Tìm danh sách lời mời dựa trên familyId
     const invitations = await this.familyInvitationRepository.find({
