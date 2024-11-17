@@ -50,7 +50,7 @@ export class FamiliesController {
 
 
   // Xem tất cả thành viên trong gia đình
-  @Get('invitations/getFamilyInvited')
+  @Post('invitations/getFamilyInvited')
   @UseGuards(AuthGuard) // Xác thực JWT
   async getFamilyInvited(@Body('familyId') familyId: string, @Request() req,) {
     const userId = req.user.sub;
