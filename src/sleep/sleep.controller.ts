@@ -34,17 +34,17 @@ export class SleepController {
     }
 
 
-    @Get('get-records-by-date')
+    @Post('get-records-by-date')
     @UseGuards(AuthGuard) // Xác thực JWT
     async getSleepRecordByDate(
     
+        @Query('userId') userId: number,
         @Query('startDate') startDate: string,
         @Query('endDate') endDate: string,
         @Request() req, 
 
     ) {
-        const userId = req.user.sub;
-        console.log(startDate,endDate);
+        console.log(userId,startDate,endDate);
         const start = new Date(startDate);
         start.setHours(12, 0, 0, 0)
         const end = new Date(endDate);
