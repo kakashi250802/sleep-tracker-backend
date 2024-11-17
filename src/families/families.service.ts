@@ -241,41 +241,39 @@ export class FamiliesService {
     }
 
     // 6. Xem danh sách thành viên trong gia đình
-    async getMembers(userId: number,familyId: string) {
-        
-
-        
-          // Kiểm tra xem người dùng có phải là thành viên của gia đình hay không
-
-
+    async getMembers(userId: number, familyId: string) {
+        console.log(userId, familyId);
         const family = await this.familiesRepository.findOne({
             where: { id: familyId },
-            relations: ['members', 'members.user'], // Lấy thông tin user của các thành viên
+            relations: ['members','members.user'],
           });
-          const member = family.members.find(member => member.user.id === userId);
-        
-          if (!member) {
-            throw new ForbiddenException('User is not a member of the family');
-          }
-          if (!family) {
+        console.log(family);
+        if (!family) {
             throw new NotFoundException('Family not found');
-          }
-          
-          // Trả về thông tin gia đình cùng các thành viên và thông tin người dùng
-          return {
+        }
+        console.log(family.members);
+        const member = family.members.find(member => member.user?.id === userId);
+        console.log(member);
+        if (!member) {
+            throw new ForbiddenException('User is not a member of the family');
+        }
+        
+        // Trả về thông tin gia đình cùng các thành viên và thông tin người dùng
+        return {
             familyId: family.id,
             familyName: family.name,
             yourRole: member?.role,
             members: family.members.map(member => ({
-              userId: member.user.id,
-              fullName: member?.user?.full_name,
-              email: member.user.email,
-              role: member.role,
-              createdDate: member.created_date,
-              updatedDate: member.updated_date
+                userId: member.user.id,
+                fullName: member?.user?.full_name,
+                email: member.user.email,
+                role: member.role,
+                createdDate: member.created_date,
+                updatedDate: member.updated_date
             }))
-          };
+        };
     }
+    
     async leaveFamily(userId: number, familyId: string): Promise<any> {
         // Kiểm tra xem gia đình có tồn tại không
 
