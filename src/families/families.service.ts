@@ -35,6 +35,47 @@ export class FamiliesService {
         const response ={...userFamily.family, userRole: userFamily?.role }
         return response; // Trả về thông tin gia đình
       }
+    async getOrganizationInvitations(familyId: string) {
+    // Tìm danh sách lời mời dựa trên familyId
+    const invitations = await this.familyInvitationRepository.find({
+        where: { family: { id: familyId } },
+        relations: ['sender', 'receiver', 'family'],
+    });
+    
+    // Trả về danh sách lời mời cùng thông tin chi tiết
+    return invitations.map(invitation => ({
+        invitationId: invitation.id,
+        senderName: invitation.sender.full_name,
+        senderId: invitation.sender.id,
+        receiverName: invitation.receiver.full_name,
+        receiverId: invitation.receiver.id,
+        familyId: invitation.family.id,
+        familyName: invitation.family.name,
+        status: invitation.status,
+        createdDate: invitation.created_date,
+    }));
+    }
+
+    async getUserInvitations(userId: number) {
+        // Tìm danh sách lời mời nhận được của người dùng
+        const invitations = await this.familyInvitationRepository.find({
+          where: { receiver: { id: userId } },
+          relations: ['sender', 'family'],
+        });
+      
+        // Trả về danh sách lời mời cùng thông tin chi tiết
+        return invitations.map(invitation => ({
+          invitationId: invitation.id,
+          senderName: invitation.sender.full_name,
+          senderId: invitation.sender.id,
+          familyId: invitation.family.id,
+          familyName: invitation.family.name,
+          status: invitation.status,
+          createdDate: invitation.created_date,
+        }));
+      }
+      
+    
 
      // 1. Tạo gia đình mới
     async createFamily(userId: number, familyName: string): Promise<Families> {
