@@ -48,28 +48,29 @@ export class FamiliesController {
     }
   
 
-  // Xem tất cả thành viên trong gia đình
-  @Post('members')
-  @UseGuards(AuthGuard) // Xác thực JWT
 
-  async getFamilyMembers(@Body('familyId') familyId: string, @Request() req,) {
-    const userId = req.user.sub;
-
-    const members = await this.familiesService.getMembers(userId, familyId);
-    if (!members) throw new NotFoundException('Family not found or no members');
-    return members;
-  }
   // Xem tất cả thành viên trong gia đình
   @Get('invitations/getFamilyInvited')
   @UseGuards(AuthGuard) // Xác thực JWT
-
   async getFamilyInvited(@Body('familyId') familyId: string, @Request() req,) {
     const userId = req.user.sub;
-
+    console.log(familyId);
     const invited = await this.familiesService.getOrganizationInvitations(familyId);
     if (!invited) throw new NotFoundException('Family not found or no invited');
     return invited;
   }
+  // Xem tất cả thành viên trong gia đình
+  @Get('list-member')
+  @UseGuards(AuthGuard) // Xác thực JWT
+  async getFamilyMember(@Body('familyId') familyId: string, @Request() req,) {
+    const userId = req.user.sub;
+    console.log(familyId);
+    const invited = await this.familiesService.getMembers(userId,familyId);
+    if (!invited) throw new NotFoundException('Family not found or no invited');
+    return invited;
+  }
+
+
   // Xem tất cả thành viên trong gia đình
   @Get('invitations/user-invited')
   @UseGuards(AuthGuard) // Xác thực JWT
