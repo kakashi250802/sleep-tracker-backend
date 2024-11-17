@@ -25,43 +25,16 @@ export class FamiliesService {
     ) {}
 
     async getFamilyInfoByUserId(userId: number) {
-        // Tìm thông tin gia đình của người dùng
         const userFamily = await this.userFamiliesRepository.findOne({
-            where: { user: { id: userId } },
-            relations: ['family'],
+          where: {user: {id: userId}  },
+          relations: ['family'],
         });
         if (!userFamily) {
-            throw new NotFoundException('User is not associated with any family.');
+          throw new NotFoundException('User is not associated with any family.');
         }
-    
-        // Lấy các lời mời có trạng thái 'pending' hoặc 'rejected'
-        const invitations = await this.familyInvitationRepository.find({
-            where: {
-                receiver: { id: userId },
-                status: In(['pending', 'rejected']), // Lọc lời mời theo trạng thái
-            },
-            relations: ['sender', 'family'],
-        });
-    
-        // Trả về thông tin gia đình cùng các lời mời liên quan
-        const response = {
-            family: {
-                ...userFamily.family,
-                userRole: userFamily?.role,
-            },
-            invitations: invitations.map(invitation => ({
-                invitationId: invitation.id,
-                senderName: invitation.sender.full_name,
-                senderId: invitation.sender.id,
-                familyId: invitation.family.id,
-                familyName: invitation.family.name,
-                status: invitation.status,
-                createdDate: invitation.created_date,
-            })),
-        };
-    
-        return response;
-    }
+        const response ={...userFamily.family, userRole: userFamily?.role }
+        return response; // Trả về thông tin gia đình
+      }
     async getOrganizationInvitations(familyId: string) {
     // Tìm danh sách lời mời dựa trên familyId
     const invitations = await this.familyInvitationRepository.find({
@@ -86,9 +59,12 @@ export class FamiliesService {
     async getUserInvitations(userId: number) {
         // Tìm danh sách lời mời nhận được của người dùng
         const invitations = await this.familyInvitationRepository.find({
-          where: { receiver: { id: userId } },
+          where: { receiver: { id: userId ,},
+          status: In(['pending', 'rejected']), // Chỉ lấy các lời mời có trạng thái 'pending' hoặc 'rejected'
+         },
           relations: ['sender', 'family'],
         });
+
       
         // Trả về danh sách lời mời cùng thông tin chi tiết
         return invitations.map(invitation => ({

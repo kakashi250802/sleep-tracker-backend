@@ -63,7 +63,7 @@ export class FamiliesController {
   @Get('invitations/getFamilyInvited')
   @UseGuards(AuthGuard) // Xác thực JWT
 
-  async getFamilyInvited(@Param('familyId') familyId: string, @Request() req,) {
+  async getFamilyInvited(@Body('familyId') familyId: string, @Request() req,) {
     const userId = req.user.sub;
 
     const invited = await this.familiesService.getOrganizationInvitations(familyId);
