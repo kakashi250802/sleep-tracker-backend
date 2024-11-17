@@ -38,7 +38,10 @@ export class FamiliesService {
     async getOrganizationInvitations(familyId: string) {
     // Tìm danh sách lời mời dựa trên familyId
     const invitations = await this.familyInvitationRepository.find({
-        where: { family: { id: familyId } },
+        where: { family: { id: familyId },
+        status: In(['pending']), // Chỉ lấy các lời mời có trạng thái 'pending' hoặc 'rejected'
+
+    },
         relations: ['sender', 'receiver', 'family'],
     });
     
@@ -176,7 +179,6 @@ export class FamiliesService {
     const existingInvitation = await this.familyInvitationRepository.findOne({
         where: { receiver: {id: receiver.id}, family: { id: familyId }, status: 'pending' },
     });
-
     console.log(existingInvitation);
 
     if (existingInvitation) {
