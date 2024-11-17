@@ -49,10 +49,10 @@ export class FamiliesController {
   
 
   // Xem tất cả thành viên trong gia đình
-  @Get('members')
+  @Post('members')
   @UseGuards(AuthGuard) // Xác thực JWT
 
-  async getFamilyMembers(@Param('familyId') familyId: string, @Request() req,) {
+  async getFamilyMembers(@Body('familyId') familyId: string, @Request() req,) {
     const userId = req.user.sub;
 
     const members = await this.familiesService.getMembers(userId, familyId);
