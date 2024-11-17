@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Put, Request, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Request, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserChangePasswordDto, UserUpdateDto } from '../dto/user.dto';
 import { UserId } from './decorator/user.decorator';
@@ -44,5 +44,17 @@ export class AuthController {
         throw new UnauthorizedException('You can only update your own user');
       }
     return this.authService.changePassword(userId, changePasswordDto);
+  }
+  @Get('information')
+  @UseGuards(AuthGuard) // Protect the endpoint with JWT guard
+  
+  async getInformation(
+      @Request() req,
+  ) {
+    const userId = req.user.sub;
+    if (!userId) {
+        throw new UnauthorizedException('You can only update your own user');
+      }
+    return this.authService.getUserById(userId);
   }
 }

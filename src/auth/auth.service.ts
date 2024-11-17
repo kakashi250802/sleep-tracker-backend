@@ -59,6 +59,17 @@ export class AuthService {
         };
     }
 
+    // Hàm lấy thông tin người dùng theo userId
+    async getUserById(userId: number) {
+        const user = await this.userRepository.findOne({ where: { id: userId } });
+
+        if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+        }
+
+        return user;
+    }
+
     // Chỉnh sửa hàm register để nhận các trường thông tin từ người dùng
     async register(
         email: string,
