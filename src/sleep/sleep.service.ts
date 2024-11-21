@@ -49,6 +49,7 @@ export class SleepService {
             where: {
                 sleep_start_time: sleepStartTime,
                 wake_up_time: wakeUpTime,
+                user_id:userId,
             },
             relations: ['sleepTimes', 'sleepHeart', 'report'],
 
