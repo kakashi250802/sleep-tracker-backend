@@ -82,9 +82,16 @@ export class AuthService {
         gender: string,
         address?: string, // Address là trường không bắt buộc
     ) {
-        // Kiểm tra xem email đã tồn tại trong hệ thống chưa
-        const existingUser = await this.userRepository.findOne({ where: { email } });
-        const existingPhoneNumber = await this.userRepository.findOne({ where: { phone_number } });
+        const new_email = email.trim();
+        const new_full_name = full_name.trim();
+        const new_phone_number = phone_number.trim();
+        const new_password = password.trim();
+        if (address) {
+            address = address.trim();
+        }
+        const existingUser = await this.userRepository.findOne({ where: { email:new_email } });
+        const existingPhoneNumber = await this.userRepository.findOne({ where: { phone_number:new_phone_number } });
+        
         if (existingPhoneNumber) {
             throw new BadRequestException('Số điện thoại đã tồn tại');
         }
@@ -92,9 +99,10 @@ export class AuthService {
             throw new BadRequestException('Email đã được sử dụng');
         }
 
-        const validatedPassword = passwordRegex.test(password);
-        const validatedPhone = phoneRegex.test(phone_number);
-        const validatedEmail = emailRegex.test(email);
+        const validatedPassword = passwordRegex.test(new_password);
+        const validatedPhone = phoneRegex.test(new_phone_number);
+        const validatedEmail = emailRegex.test(new_email);
+        console.log(new_email, validatedEmail);
         if (!validatedEmail) {
             throw new BadRequestException('Email sai định dạng!');
         }
@@ -123,17 +131,17 @@ export class AuthService {
             throw new BadRequestException('Giới tính không hợp lệ. Yêu cầu: male, female, hoặc other');
         }
         // Mã hóa mật khẩu trước khi lưu
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(new_password, 10);
 
         // Tạo đối tượng User mới
         const newUser = this.userRepository.create({
-            email,
-            phone_number,
+            email:new_email,
+            phone_number:new_phone_number,
             password: hashedPassword,
             birth_date,
             weight,
             height,
-            full_name,
+            full_name:new_full_name,
             gender,
             address,
             created_at: new Date(), // Gán thời gian hiện tại cho trường created_at
