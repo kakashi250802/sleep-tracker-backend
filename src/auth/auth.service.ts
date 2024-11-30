@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user/user.entities';
 import { ConfigService } from '@nestjs/config';
-import { passwordRegex, phoneRegex } from '../utils';
+import { emailRegex, passwordRegex, phoneRegex } from '../utils';
 import { UserChangePasswordDto, UserUpdateDto } from '../dto/user.dto';
 
 @Injectable()
@@ -39,7 +39,7 @@ export class AuthService {
 
         // Nếu không tìm thấy tài khoản, trả về lỗi Unauthorized
         if (!user) {
-            throw new UnauthorizedException('Invalid email/phone number or password');
+            throw new UnauthorizedException('Sai tài thông tin đăng nhập vui lòng kiển tra lại!');
         }
 
         // So sánh mật khẩu đã nhập với mật khẩu trong cơ sở dữ liệu
@@ -86,33 +86,41 @@ export class AuthService {
         const existingUser = await this.userRepository.findOne({ where: { email } });
         const existingPhoneNumber = await this.userRepository.findOne({ where: { phone_number } });
         if (existingPhoneNumber) {
-            throw new ConflictException('Phone number already in use');
+            throw new BadRequestException('Số điện thoại đã tồn tại');
         }
         if (existingUser) {
-            throw new ConflictException('Email already in use');
+            throw new BadRequestException('Email đã được sử dụng');
         }
 
         const validatedPassword = passwordRegex.test(password);
         const validatedPhone = phoneRegex.test(phone_number);
-        console.log(validatedPhone);
-        if (!validatedPassword) {
-            throw new BadRequestException('Password wrong format(8-20 character)');
+        const validatedEmail = emailRegex.test(email);
+        if (!validatedEmail) {
+            throw new BadRequestException('Email sai định dạng!');
         }
         if (!validatedPhone) {
-            throw new BadRequestException('Phone number wrong');
+            throw new BadRequestException('Số điện thoại sai định dạng!');
+        }
+        if (!validatedPassword) {
+            throw new BadRequestException('Mật khẩu sai định dạng, phải từ 8 -25 ký tự có ít nhất 1 chữ hoa 1 chữ thường 1 ký tự đặc biệt và 1 chữ số!');
         }
 
         // Kiểm tra điều kiện birth_date nhỏ hơn ngày hiện tại
         if (new Date(birth_date) >= new Date()) {
-            throw new BadRequestException('Birth date must be in the past');
+            throw new BadRequestException('Ngày sinh phải nhỏ hơn hoặc bằng ngày hiện tại');
         }
 
         // Kiểm tra weight và height phải lớn hơn 0
-        if (weight <= 0) {
-            throw new BadRequestException('Weight must be greater than 0');
+        if (weight <= 30 || weight>=300) {
+            throw new BadRequestException('Cân nặng không hợp lệ. Cân nặng phải từ 30kg-300kg');
         }
-        if (height <= 0) {
-            throw new BadRequestException('Height must be greater than 0');
+        if (height <= 100 || height >=250) {
+            throw new BadRequestException('Chiều cao không hợp lê. Chiều cao phải từ 100cm -250cm');
+        }
+        // Kiểm tra giới tính hợp lệ
+        const validGenders = ['male', 'female', 'other'];
+        if (!validGenders.includes(gender.toLowerCase())) {
+            throw new BadRequestException('Giới tính không hợp lệ. Yêu cầu: male, female, hoặc other');
         }
         // Mã hóa mật khẩu trước khi lưu
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -136,25 +144,25 @@ export class AuthService {
             await this.userRepository.save(newUser);
             // Trả về thông báo đăng ký thành công
             return {
-                message: 'User registered successfully',
+                message: 'Đăng ký thành công!',
                 statusCode: 200,
             };
         } catch (error) {
-            throw new InternalServerErrorException('Error while registering user');
+            throw new InternalServerErrorException('Có lỗi khi đăng ký!');
         }
     }
     async updateUser(id: number, updateUserDto: UserUpdateDto): Promise<User> {
         const user = await this.userRepository.findOne({ where: { id } });
         console.log(user);
         if (!user) {
-          throw new NotFoundException('User not found');
+          throw new NotFoundException('Người dùng không tồn tại');
         }
     
         // Check for email conflict
         if (updateUserDto.email) {
           const existingEmail = await this.userRepository.findOne({ where: { email: updateUserDto.email } });
           if (existingEmail && existingEmail.id !== id) {
-            throw new ConflictException('Email already in use');
+            throw new BadRequestException('Email đã tồn tại');
           }
         }
     
@@ -162,7 +170,7 @@ export class AuthService {
         if (updateUserDto.phone_number) {
           const existingPhoneNumber = await this.userRepository.findOne({ where: { phone_number: updateUserDto.phone_number } });
           if (existingPhoneNumber && existingPhoneNumber.id !== id) {
-            throw new ConflictException('Phone number already in use');
+            throw new BadRequestException('Số điện thoại đã tồn tại');
           }
         }
     
@@ -176,20 +184,20 @@ export class AuthService {
 
     // Check if the new password and confirm password match
     if (newPassword !== confirmPassword) {
-      throw new UnauthorizedException('New password and confirm password do not match');
+      throw new UnauthorizedException('Mật khẩu mới và xác nhận mật khẩu không giống nhau!');
     }
 
     // Find user by ID
     const user = await this.userRepository.findOne({ where: { id: userId } });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Người dùng không tồn tại!');
     }
 
     // Verify old password
     const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password);
     if (!isOldPasswordValid) {
-      throw new UnauthorizedException('Old password is incorrect');
+      throw new UnauthorizedException('Mật khẩu cũ không đúng!');
     }
 
     // Hash the new password
@@ -199,6 +207,6 @@ export class AuthService {
     user.password = hashedNewPassword;
     await this.userRepository.save(user);
 
-    return { message: 'Password successfully updated' };
+    return { message: 'Cập nhật mật khẩu thành công!' };
 }
 }

@@ -43,10 +43,10 @@ export class UserChangePasswordDto {
     oldPassword: string;
   
     @IsString()
-    @MinLength(8, { message: 'New password must be at least 8 characters' })
-    @MaxLength(20, { message: 'New password must not exceed 20 characters' })
+    @MinLength(8, { message: 'Mật khẩu mới phải có ít nhất 8 ký tự' })
+    @MaxLength(25, { message: 'Mật khẩu mới không được hơn 25 ký tự' })
     @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,20}$/, {
-      message: 'New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+      message: 'Mật khẩu mới có ít nhất 1 chữ hoa, 1 chữ thường 1 số và 1 ký tự đặc biệt!',
     })
     newPassword: string;
   
