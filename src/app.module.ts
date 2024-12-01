@@ -14,6 +14,8 @@ import { FamilyInvitation } from './entities/familyInvitations/familyInvitations
 import { UserFamilies } from './entities/userFamilies/userFamilies.entity';
 import { Families } from './entities/families/families.entities';
 import { FamiliesModule } from './families/families.module';
+import { AdviceModule } from './openai/openai.module';
+
 
 @Module({
   imports: [
@@ -33,7 +35,7 @@ import { FamiliesModule } from './families/families.module';
     AuthModule,
     SleepModule,
     SleepReportsModule, 
-    FamiliesModule
+    FamiliesModule, AdviceModule
 
   ],
 

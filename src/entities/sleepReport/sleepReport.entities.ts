@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn, ManyToOne, IsNull } from 'typeorm';
 import { SleepData } from '../sleepData/sleepData.entities';
 import { SleepQuality } from '../../dto/sleepReport.dto';
 import { User } from '../user/user.entities';
@@ -27,6 +27,8 @@ export class SleepReport {
 
   @Column({ type: 'float' })
   score: number;
+  @Column({ type: 'varchar', nullable: true })
+  advice?: string;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;

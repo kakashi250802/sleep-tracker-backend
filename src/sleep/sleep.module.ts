@@ -1,3 +1,4 @@
+import { AdviceModule } from './../openai/openai.module';
 import { Module } from '@nestjs/common';
 import { SleepController } from './sleep.controller';
 import { SleepService } from './sleep.service';
@@ -14,7 +15,7 @@ import { User } from '../entities/user/user.entities';
 
 @Module({
     imports: [ ConfigModule,
-        AuthModule,TypeOrmModule.forFeature([SleepData, SleepHeart, SleepTime,SleepReport,User])],
+        AuthModule,TypeOrmModule.forFeature([SleepData, SleepHeart, SleepTime,SleepReport,User]),AdviceModule],
     
     providers: [SleepService],
     controllers: [SleepController],

@@ -10,6 +10,7 @@ import axios from 'axios'; // Import axios for API calls
 import { SleepReport } from '../entities/sleepReport/sleepReport.entities';
 import { User } from '../entities/user/user.entities';
 import { SleepQuality } from '../dto/sleepReport.dto';
+import { OpenAIService } from 'src/openai/openai.service';
 
 @Injectable()
 export class SleepService {
@@ -24,6 +25,7 @@ export class SleepService {
         private sleepReportRepository: Repository<SleepReport>,
         @InjectRepository(User)
         private userRepository: Repository<User>,
+        private readonly openAIService: OpenAIService,
     ) { }
 
     async processAndSaveData(
@@ -130,7 +132,32 @@ export class SleepService {
         const sleepScoreResponse = await axios.post('http://127.0.0.1:5000/predict', predictionData);
         const sleepScore = sleepScoreResponse.data.predictions[0]?.score;
         const sleepQuality: SleepQuality = sleepScoreResponse.data.predictions[0]?.quality;
-    
+        console.log(sleepScore,sleepQuality,process.env.OPEN_AI_KEY);
+        // Tạo prompt để lấy lời khuyên
+        const advicePrompt = `
+        Dưới đây là thông tin về giấc ngủ của người dùng:
+        - Tổng thời gian ngủ: ${totalSleepTime} phút
+        - Thời gian ngủ REM: ${remSleep} phút (${remSleepPercentage.toFixed(2)}%)
+        - Thời gian ngủ sâu (Deep Sleep): ${deepSleep} phút (${deepSleepPercentage.toFixed(2)}%)
+        - Nhịp tim trung bình: ${avgHeartRate} bpm
+        - Nhịp tim tối đa: ${maxHeartRate} bpm
+        - Nhịp tim tối thiểu: ${minHeartRate} bpm
+        - Tỷ lệ nhịp tim dưới mức nghỉ: ${heartRateBelowRestingPercentage.toFixed(2)}%
+        - Thời gian bắt đầu giấc ngủ: ${sleepStartTime.toISOString()}
+        - Thời gian thức dậy: ${wakeUpTime.toISOString()}
+        - Thời gian ngủ cốt lõi: ${coreSleep} phút (${coreSleepPercentage.toFixed(2)}%)
+        - Với điểm số giấc ngủ(theo chuẩn fitbit): ${sleepScore}
+        - Với đánh giá giấc ngủ(theo chuẩn fitbit): ${sleepQuality}
+        Dựa trên các dữ liệu trên, vui lòng đưa ra lời khuyên thật ngắn gọn nhất có thể khoảng 40 từ tập trung vào 3 vấn đề dưới đây:
+        1. Nếu giấc ngủ không đủ hoặc không tốt, hãy khuyên người dùng ngủ sớm hơn hoặc cải thiện giấc ngủ.
+        2. Nếu giấc ngủ tốt nhưng nhịp tim không ổn, hãy khuyên người dùng kiểm tra sức khoẻ hoặc gặp bác sĩ.
+        3. Nếu giấc ngủ ổn và nhịp tim bình thường, hãy khuyên người dùng duy trì thói quen này.
+        mẫu promt trả về sẽ như này:"tổng quan giấc ngủ của bạn..., Giờ đi ngủ của bạn..., các chỉ số giấc ngủ của bạn..., bạn nên ..."
+        `;
+
+// Gọi OpenAIService để lấy lời khuyên
+        const advice = await this.openAIService.getAdvice(advicePrompt);
+        console.log(advice);
         // Lưu kết quả sleep score vào bảng sleep_report
         if (sleepScore != null) {
             const sleepReport = this.sleepReportRepository.create({
@@ -139,6 +166,7 @@ export class SleepService {
                 report_date: sleepStartTime.toISOString().split('T')[0],
                 sleep_quality: sleepQuality,
                 score: sleepScore,
+                advice
             });
     
             await this.sleepReportRepository.save(sleepReport);
@@ -149,6 +177,7 @@ export class SleepService {
             dataPredict: {
                 sleepScore,
                 sleepQuality,
+                advice,
             },
         };
     }
