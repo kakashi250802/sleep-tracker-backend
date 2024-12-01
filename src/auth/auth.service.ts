@@ -161,30 +161,40 @@ export class AuthService {
     }
     async updateUser(id: number, updateUserDto: UserUpdateDto): Promise<User> {
         const user = await this.userRepository.findOne({ where: { id } });
-        console.log(user);
+      
         if (!user) {
           throw new NotFoundException('Người dùng không tồn tại');
         }
-    
-        // Check for email conflict
-        if (updateUserDto.email) {
-          const existingEmail = await this.userRepository.findOne({ where: { email: updateUserDto.email } });
-          if (existingEmail && existingEmail.id !== id) {
+      
+        // Kiểm tra xung đột email hoặc số điện thoại
+        const conflictingUser = await this.userRepository.findOne({
+          where: [
+            { email: updateUserDto.email },
+            { phone_number: updateUserDto.phone_number },
+          ],
+        });
+      
+        if (conflictingUser && conflictingUser.id !== id) {
+          if (conflictingUser.email === updateUserDto.email) {
             throw new BadRequestException('Email đã tồn tại');
           }
-        }
-    
-        // Check for phone number conflict
-        if (updateUserDto.phone_number) {
-          const existingPhoneNumber = await this.userRepository.findOne({ where: { phone_number: updateUserDto.phone_number } });
-          if (existingPhoneNumber && existingPhoneNumber.id !== id) {
+          if (conflictingUser.phone_number === updateUserDto.phone_number) {
             throw new BadRequestException('Số điện thoại đã tồn tại');
           }
         }
-    
-        const newUserUpdate = {...user,updateUserDto,birth_date: new Date(updateUserDto.birth_date)}
-
-        return this.userRepository.save(newUserUpdate);
+      
+        // Xử lý `birth_date` nếu cần thiết
+        if (updateUserDto.birth_date) {
+          updateUserDto.birth_date = new Date(updateUserDto.birth_date);
+        }
+      
+        // Hợp nhất dữ liệu mới với dữ liệu cũ
+        const updatedUser: Partial<User> = {
+          ...user,
+          ...updateUserDto,
+        };
+      
+        return this.userRepository.save(updatedUser);
       }
         // Change Password Method
   async changePassword(userId: number, changePasswordDto: UserChangePasswordDto): Promise<{ message: string }> {

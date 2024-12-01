@@ -21,16 +21,17 @@ export class AuthController {
   @Post('update-user-info')
   @UseGuards(AuthGuard) // Protect this route
   async updateUser(
-    @Param('id') id: number,
     @Body() updateUserDto: UserUpdateDto,
     @Request() req,
   ): Promise<User> {
     const userId = req.user.sub;
+    console.log(updateUserDto);
+    console.log('updateUserDto');
     console.log(userId);
     if (!userId) {
-      throw new UnauthorizedException('You can only update your own profile');
+      throw new UnauthorizedException('Bạn chỉ có quyền cập nhật hồ sơ cá nhân của mình!');
     }
-    return this.authService.updateUser(id, updateUserDto);
+    return this.authService.updateUser(userId, updateUserDto);
   }
   @Post('change-password')
   @UseGuards(AuthGuard) // Protect the endpoint with JWT guard
