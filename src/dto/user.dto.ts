@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsDate, IsPhoneNumber, IsInt, IsPositive, MinLength, MaxLength, Matches, ValidateIf, Min, Max, IsIn } from 'class-validator';
+import { IsString, IsOptional, IsDate, IsPhoneNumber, IsInt, IsPositive, MinLength, MaxLength, Matches, ValidateIf, Min, Max, IsIn, IsNotEmpty, IsDateString } from 'class-validator';
 import { SleepData } from '../entities/sleepData/sleepData.entities';
 import { OneToMany } from 'typeorm';
 import { Transform } from 'class-transformer';
@@ -58,3 +58,13 @@ export class UserChangePasswordDto {
 
    
 }
+export class UpdateSleepScheduleDto {
+    @IsNotEmpty()
+    @IsDateString()
+    sleepTime: string;
+  
+    @IsNotEmpty()
+    @IsDateString()
+    wakeUpTime: string;
+  }
+  

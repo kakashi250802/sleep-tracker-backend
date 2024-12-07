@@ -53,7 +53,10 @@ export class User {
     // Quan hệ 1-1 với UserFamilies, theo dõi gia đình của người dùng
     @OneToOne(() => UserFamilies, userFamily => userFamily.user)
     userFamily: UserFamilies;
-
+    @Column({ type: 'timestamp', nullable: true })
+    sleepTime: Date;
+    @Column({ type: 'timestamp', nullable: true })
+    wakeUpTime: Date;
     @CreateDateColumn()
     created_date: Date;
     @CreateDateColumn()

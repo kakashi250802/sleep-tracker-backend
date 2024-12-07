@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post, Put, Request, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserChangePasswordDto, UserUpdateDto } from '../dto/user.dto';
+import { UpdateSleepScheduleDto, UserChangePasswordDto, UserUpdateDto } from '../dto/user.dto';
 import { UserId } from './decorator/user.decorator';
 import { User } from '../entities/user/user.entities';
 import { AuthGuard } from './guard/jwt-auth.guard';
@@ -58,4 +58,21 @@ export class AuthController {
       }
     return this.authService.getUserById(userId);
   }
+  @Post('sleep-schedule')
+  @UseGuards(AuthGuard) // Protect the endpoint with JWT guard
+  async updateSleepSchedule(
+    @Body() updateData: UpdateSleepScheduleDto,
+    @Request() req,
+  ) {
+    const userId = req.user.sub;
+    if (!userId) {
+        throw new UnauthorizedException('You can only update your own user');
+      }
+    return this.authService.updateSleepSchedule(
+      userId,
+      new Date(updateData.sleepTime),
+      new Date(updateData.wakeUpTime),
+    );
+  }
+
 }

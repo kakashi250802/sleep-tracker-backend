@@ -39,7 +39,7 @@ export class AuthService {
 
         // Nếu không tìm thấy tài khoản, trả về lỗi Unauthorized
         if (!user) {
-            throw new UnauthorizedException('Sai tài thông tin đăng nhập vui lòng kiển tra lại!');
+            throw new UnauthorizedException('Sai thông tin đăng nhập vui lòng kiển tra lại!');
         }
 
         // So sánh mật khẩu đã nhập với mật khẩu trong cơ sở dữ liệu
@@ -226,5 +226,20 @@ export class AuthService {
     await this.userRepository.save(user);
 
     return { message: 'Cập nhật mật khẩu thành công!' };
-}
+    }
+    async updateSleepSchedule(
+        userId: number,
+        sleepTime: Date,
+        wakeUpTime: Date,
+      ): Promise<User> {
+        const user = await this.userRepository.findOne({ where: { id: userId } });
+    
+        if (!user) {
+          throw new NotFoundException(`User with ID ${userId} not found`);
+        }
+    
+        user.sleepTime = sleepTime;
+        user.wakeUpTime = wakeUpTime;
+        return this.userRepository.save(user);
+      }
 }
