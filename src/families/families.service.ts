@@ -363,11 +363,11 @@ export class FamiliesService {
 
     // Kiểm tra quyền admin
     const isAdmin = family.members.some(
-      (member) => member.user.id === adminId && member.role === 'admin',
-    );
+        (member) => member.user && member.user.id === adminId && member.role === 'admin',
+      );
 
     if (!isAdmin) {
-      throw new ForbiddenException('Only admin can delete the family');
+      throw new ForbiddenException('Chỉ admin mới được xoá gia đình');
     }
 
     await this.familiesRepository.remove(family);
