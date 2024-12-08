@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { SleepData } from '../entities/sleepData/sleepData.entities';
 import { SleepHeart } from '../entities/sleepHeart/sleepHeart.entities';
 import { SleepTime } from '../entities/sleepTime/sleepTime.entities';
-import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { Between, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import { CreateSleepHeartDto } from './dto/sleepHeart.dto';
 import { CreateSleepTimeDto } from './dto/sleepTime.dto';
 import axios from 'axios'; // Import axios for API calls
@@ -28,315 +28,161 @@ export class SleepService {
         private readonly openAIService: OpenAIService,
     ) { }
 
-//     async processAndSaveData(
-//         userId: number,
-//         heartData: CreateSleepHeartDto[],
-//         sleepData: CreateSleepTimeDto[],
-//     ) {
-//         // Kiểm tra đầu vào
-//         if (!heartData || heartData.length === 0) {
-//             throw new BadRequestException('heartData không được trống');
-//         }
-//         if (!sleepData || sleepData.length === 0) {
-//             throw new BadRequestException('sleepData không được trống');
-//         }
+    async processAndSaveData(
+        userId: number,
+        heartData: CreateSleepHeartDto[],
+        sleepData: CreateSleepTimeDto[],
+        forceSleepTime:string,
+        forceWakeTime:string,
+    ) {
+        // // Kiểm tra đầu vào
+        // if (!heartData || heartData.length === 0) {
+        //     throw new BadRequestException('heartData không được trống');
+        // }
+        // if (!sleepData || sleepData.length === 0) {
+        //     throw new BadRequestException('sleepData không được trống');
+        // }
     
-//         // Lấy thời gian bắt đầu của giấc ngủ từ bản ghi đầu tiên
-//         const sleepStartTime = new Date(sleepData[0].startDate);
-//         // Lấy thời gian thức dậy từ bản ghi cuối cùng
-//         const wakeUpTime = new Date(sleepData[sleepData.length - 1].endDate);
-    
-//         // Kiểm tra bản ghi giấc ngủ đã tồn tại
-//         let existingSleepData = await this.sleepDataRepository.findOne({
-//             where: {
-//                 sleep_start_time: sleepStartTime,
-//                 wake_up_time: wakeUpTime,
-//                 user_id:userId,
-//             },
-//             relations: ['sleepTimes', 'sleepHeart', 'report'],
-
-//         });
-    
-//         if (existingSleepData) {
-//             // Gọi API để lấy điểm giấc ngủ cho bản ghi đã tồn tại
-    
-//             return {
-//                 dataSleep: existingSleepData,
-
-//             };
-//         }
-    
-//         // Tính toán nhịp tim từ heartData
-//         const avgHeartRate = heartData.reduce((sum, h) => sum + h.value, 0) / heartData.length;
-//         const maxHeartRate = Math.max(...heartData.map(h => h.value));
-//         const minHeartRate = Math.min(...heartData.map(h => h.value));
-    
-//         // Tính toán tổng thời gian giấc ngủ (đơn vị phút)
-//         const totalSleepTime = sleepData.reduce((sum, s) => {
-//             const start = new Date(s.startDate).getTime();
-//             const end = new Date(s.endDate).getTime();
-//             return sum + (end - start) / (1000 * 60); // Chuyển đổi thời gian từ mili giây sang phút
-//         }, 0);
-    
-//         // Tính toán các giai đoạn giấc ngủ
-//         const coreSleep = sleepData.filter(s => s.value === 'CORE').length * (totalSleepTime / sleepData.length);
-//         const deepSleep = sleepData.filter(s => s.value === 'DEEP').length * (totalSleepTime / sleepData.length);
-//         const remSleep = sleepData.filter(s => s.value === 'REM').length * (totalSleepTime / sleepData.length);
-    
-//         // Tính tỷ lệ phần trăm các giai đoạn giấc ngủ
-//         const coreSleepPercentage = (coreSleep / totalSleepTime) * 100;
-//         const deepSleepPercentage = (deepSleep / totalSleepTime) * 100;
-//         const remSleepPercentage = (remSleep / totalSleepTime) * 100;
-    
-//         // Tính phần trăm nhịp tim dưới mức nghỉ
-//         const heartRateBelowRestingPercentage = heartData.filter(h => h.value < avgHeartRate).length / heartData.length * 100;
-    
-//         // Tạo bản ghi giấc ngủ mới
-//         const sleepRecord = this.sleepDataRepository.create({
-//             user_id: userId,
-//             total_time: totalSleepTime,
-//             total_rem_sleep: remSleep,
-//             total_deep_sleep: deepSleep,
-//             heart_rate_below_resting_percentage: heartRateBelowRestingPercentage,
-//             wake_up_time: wakeUpTime,
-//             sleep_start_time: sleepStartTime,
-//             heart_rate_avg: avgHeartRate,
-//             core_sleep: coreSleep,
-//             core_sleep_percentage: coreSleepPercentage,
-//             deep_sleep: deepSleep,
-//             deep_sleep_percentage: deepSleepPercentage,
-//             max_heart_rate: maxHeartRate,
-//             min_heart_rate: minHeartRate,
-//             rem_sleep: remSleep,
-//             rem_sleep_percentage: remSleepPercentage,
-//         });
-    
-//         const savedSleepData = await this.sleepDataRepository.save(sleepRecord);
-    
-//         // Lưu dữ liệu nhịp tim
-//         const heartEntities = heartData.map(h => this.sleepHeartRepository.create({ ...h, sleepData: savedSleepData }));
-//         await this.sleepHeartRepository.save(heartEntities);
-    
-//         // Lưu dữ liệu thời gian ngủ
-//         const sleepEntities = sleepData.map(s => this.sleepTimeRepository.create({ ...s, sleepData: savedSleepData }));
-//         await this.sleepTimeRepository.save(sleepEntities);
-    
-//         // Gọi API để lấy điểm giấc ngủ cho bản ghi mới
-//         const predictionData = {
-//             "REM SLEEP": remSleepPercentage / 100,
-//             "DEEP SLEEP": deepSleepPercentage / 100,
-//             "HEART RATE BELOW RESTING": heartRateBelowRestingPercentage / 100,
-//             "MINUTES of Sleep": totalSleepTime,
-//         };
-    
-//         const sleepScoreResponse = await axios.post('http://127.0.0.1:5000/predict', predictionData);
-//         const sleepScore = sleepScoreResponse.data.predictions[0]?.score;
-//         const sleepQuality: SleepQuality = sleepScoreResponse.data.predictions[0]?.quality;
-//         console.log(sleepScore,sleepQuality,process.env.OPEN_AI_KEY);
-//         // Tạo prompt để lấy lời khuyên
-//         const advicePrompt = `
-//         Dưới đây là thông tin về giấc ngủ của người dùng:
-//         - Tổng thời gian ngủ: ${totalSleepTime} phút
-//         - Thời gian ngủ REM: ${remSleep} phút (${remSleepPercentage.toFixed(2)}%)
-//         - Thời gian ngủ sâu (Deep Sleep): ${deepSleep} phút (${deepSleepPercentage.toFixed(2)}%)
-//         - Nhịp tim trung bình: ${avgHeartRate} bpm
-//         - Nhịp tim tối đa: ${maxHeartRate} bpm
-//         - Nhịp tim tối thiểu: ${minHeartRate} bpm
-//         - Tỷ lệ nhịp tim dưới mức nghỉ: ${heartRateBelowRestingPercentage.toFixed(2)}%
-//         - Thời gian bắt đầu giấc ngủ: ${sleepStartTime.toISOString()}
-//         - Thời gian thức dậy: ${wakeUpTime.toISOString()}
-//         - Thời gian ngủ cốt lõi: ${coreSleep} phút (${coreSleepPercentage.toFixed(2)}%)
-//         - Với điểm số giấc ngủ(theo chuẩn fitbit): ${sleepScore}
-//         - Với đánh giá giấc ngủ(theo chuẩn fitbit): ${sleepQuality}
-//         Dựa trên các dữ liệu trên, vui lòng đưa ra lời khuyên thật ngắn gọn nhất có thể khoảng 40 từ tập trung vào 3 vấn đề dưới đây:
-//         1. Nếu giấc ngủ không đủ hoặc không tốt, hãy khuyên người dùng ngủ sớm hơn hoặc cải thiện giấc ngủ.
-//         2. Nếu giấc ngủ tốt nhưng nhịp tim không ổn, hãy khuyên người dùng kiểm tra sức khoẻ hoặc gặp bác sĩ.
-//         3. Nếu giấc ngủ ổn và nhịp tim bình thường, hãy khuyên người dùng duy trì thói quen này.
-//         mẫu promt trả về sẽ như này:"tổng quan giấc ngủ của bạn..., Giờ đi ngủ của bạn..., các chỉ số giấc ngủ của bạn..., bạn nên ..."
-//         `;
-
-// // Gọi OpenAIService để lấy lời khuyên
-//         const advice = await this.openAIService.getAdvice(advicePrompt);
-//         console.log(advice);
-//         // Lưu kết quả sleep score vào bảng sleep_report
-//         if (sleepScore != null) {
-//             const sleepReport = this.sleepReportRepository.create({
-//                 user: { id: userId },
-//                 sleepData: { id: savedSleepData.id },
-//                 report_date: sleepStartTime.toISOString().split('T')[0],
-//                 sleep_quality: sleepQuality,
-//                 score: sleepScore,
-//                 advice
-//             });
-    
-//             await this.sleepReportRepository.save(sleepReport);
-//         }
-    
-//         return {
-//             dataSleep: savedSleepData,
-//             dataPredict: {
-//                 sleepScore,
-//                 sleepQuality,
-//                 advice,
-//             },
-//         };
-//     }
-async processAndSaveData(
-    userId: number,
-    heartData: CreateSleepHeartDto[],
-    sleepData: CreateSleepTimeDto[],
-) {
-    // Kiểm tra đầu vào và trả về bản ghi nếu dữ liệu trống
-    if (!heartData || heartData.length === 0 || !sleepData || sleepData.length === 0) {
-        // Nếu không có dữ liệu heartData và sleepData thì chỉ trả về bản ghi đã tồn tại (nếu có)
-        const sleepStartTime = new Date(sleepData && sleepData.length > 0 ? sleepData[0].startDate : null);
-        const wakeUpTime = new Date(sleepData && sleepData.length > 0 ? sleepData[sleepData.length - 1].endDate : null);
-
+        // Lấy thời gian bắt đầu của giấc ngủ từ bản ghi đầu tiên
+        const sleepStartTime = new Date(sleepData[0]?.startDate || forceSleepTime);
+        // Lấy thời gian thức dậy từ bản ghi cuối cùng
+        const wakeUpTime = new Date(sleepData[sleepData.length - 1]?.endDate || forceWakeTime);
+        console.log(sleepStartTime, wakeUpTime);
+        // Kiểm tra bản ghi giấc ngủ đã tồn tại
         let existingSleepData = await this.sleepDataRepository.findOne({
             where: {
-                sleep_start_time: sleepStartTime,
-                wake_up_time: wakeUpTime,
-                user_id: userId,
+              user_id: userId,
+              sleep_start_time: MoreThanOrEqual(sleepStartTime),
+              wake_up_time: LessThanOrEqual(wakeUpTime),
             },
             relations: ['sleepTimes', 'sleepHeart', 'report'],
-        });
-
+          });
+    
         if (existingSleepData) {
+            // Gọi API để lấy điểm giấc ngủ cho bản ghi đã tồn tại
+            console.log(existingSleepData);
             return {
                 dataSleep: existingSleepData,
+
             };
-        } else {
-            throw new BadRequestException('Không tìm thấy dữ liệu giấc ngủ cho người dùng này');
         }
-    }
-
-    // Các bước còn lại xử lý khi có dữ liệu heartData và sleepData...
-    const sleepStartTime = new Date(sleepData[0].startDate);
-    const wakeUpTime = new Date(sleepData[sleepData.length - 1].endDate);
-
-    // Kiểm tra bản ghi giấc ngủ đã tồn tại
-    let existingSleepData = await this.sleepDataRepository.findOne({
-        where: {
-            sleep_start_time: sleepStartTime,
-            wake_up_time: wakeUpTime,
+    
+        // Tính toán nhịp tim từ heartData
+        const avgHeartRate = heartData.reduce((sum, h) => sum + h.value, 0) / heartData.length;
+        const maxHeartRate = Math.max(...heartData.map(h => h.value));
+        const minHeartRate = Math.min(...heartData.map(h => h.value));
+    
+        // Tính toán tổng thời gian giấc ngủ (đơn vị phút)
+        const totalSleepTime = sleepData.reduce((sum, s) => {
+            const start = new Date(s.startDate).getTime();
+            const end = new Date(s.endDate).getTime();
+            return sum + (end - start) / (1000 * 60); // Chuyển đổi thời gian từ mili giây sang phút
+        }, 0);
+    
+        // Tính toán các giai đoạn giấc ngủ
+        const coreSleep = sleepData.filter(s => s.value === 'CORE').length * (totalSleepTime / sleepData.length);
+        const deepSleep = sleepData.filter(s => s.value === 'DEEP').length * (totalSleepTime / sleepData.length);
+        const remSleep = sleepData.filter(s => s.value === 'REM').length * (totalSleepTime / sleepData.length);
+    
+        // Tính tỷ lệ phần trăm các giai đoạn giấc ngủ
+        const coreSleepPercentage = (coreSleep / totalSleepTime) * 100;
+        const deepSleepPercentage = (deepSleep / totalSleepTime) * 100;
+        const remSleepPercentage = (remSleep / totalSleepTime) * 100;
+    
+        // Tính phần trăm nhịp tim dưới mức nghỉ
+        const heartRateBelowRestingPercentage = heartData.filter(h => h.value < avgHeartRate).length / heartData.length * 100;
+    
+        // Tạo bản ghi giấc ngủ mới
+        const sleepRecord = this.sleepDataRepository.create({
             user_id: userId,
-        },
-        relations: ['sleepTimes', 'sleepHeart', 'report'],
-    });
+            total_time: totalSleepTime,
+            total_rem_sleep: remSleep,
+            total_deep_sleep: deepSleep,
+            heart_rate_below_resting_percentage: heartRateBelowRestingPercentage,
+            wake_up_time: wakeUpTime,
+            sleep_start_time: sleepStartTime,
+            heart_rate_avg: avgHeartRate,
+            core_sleep: coreSleep,
+            core_sleep_percentage: coreSleepPercentage,
+            deep_sleep: deepSleep,
+            deep_sleep_percentage: deepSleepPercentage,
+            max_heart_rate: maxHeartRate,
+            min_heart_rate: minHeartRate,
+            rem_sleep: remSleep,
+            rem_sleep_percentage: remSleepPercentage,
+        });
+    
+        const savedSleepData = await this.sleepDataRepository.save(sleepRecord);
+    
+        // Lưu dữ liệu nhịp tim
+        const heartEntities = heartData.map(h => this.sleepHeartRepository.create({ ...h, sleepData: savedSleepData }));
+        await this.sleepHeartRepository.save(heartEntities);
+    
+        // Lưu dữ liệu thời gian ngủ
+        const sleepEntities = sleepData.map(s => this.sleepTimeRepository.create({ ...s, sleepData: savedSleepData }));
+        await this.sleepTimeRepository.save(sleepEntities);
+    
+        // Gọi API để lấy điểm giấc ngủ cho bản ghi mới
+        const predictionData = {
+            "REM SLEEP": remSleepPercentage / 100,
+            "DEEP SLEEP": deepSleepPercentage / 100,
+            "HEART RATE BELOW RESTING": heartRateBelowRestingPercentage / 100,
+            "MINUTES of Sleep": totalSleepTime,
+        };
+    
+        const sleepScoreResponse = await axios.post('http://127.0.0.1:5000/predict', predictionData);
+        const sleepScore = sleepScoreResponse.data.predictions[0]?.score;
+        const sleepQuality: SleepQuality = sleepScoreResponse.data.predictions[0]?.quality;
+        console.log(sleepScore,sleepQuality,process.env.OPEN_AI_KEY);
+        // Tạo prompt để lấy lời khuyên
+        const advicePrompt = `
+        Dưới đây là thông tin về giấc ngủ của người dùng:
+        - Tổng thời gian ngủ: ${totalSleepTime} phút
+        - Thời gian ngủ REM: ${remSleep} phút (${remSleepPercentage.toFixed(2)}%)
+        - Thời gian ngủ sâu (Deep Sleep): ${deepSleep} phút (${deepSleepPercentage.toFixed(2)}%)
+        - Nhịp tim trung bình: ${avgHeartRate} bpm
+        - Nhịp tim tối đa: ${maxHeartRate} bpm
+        - Nhịp tim tối thiểu: ${minHeartRate} bpm
+        - Tỷ lệ nhịp tim dưới mức nghỉ: ${heartRateBelowRestingPercentage.toFixed(2)}%
+        - Thời gian bắt đầu giấc ngủ: ${sleepStartTime.toISOString()}
+        - Thời gian thức dậy: ${wakeUpTime.toISOString()}
+        - Thời gian ngủ cốt lõi: ${coreSleep} phút (${coreSleepPercentage.toFixed(2)}%)
+        - Với điểm số giấc ngủ(theo chuẩn fitbit): ${sleepScore}
+        - Với đánh giá giấc ngủ(theo chuẩn fitbit): ${sleepQuality}
+        Dựa trên các dữ liệu trên, vui lòng đưa ra lời khuyên thật ngắn gọn nhất có thể khoảng 40 từ tập trung vào 3 vấn đề dưới đây:
+        1. Nếu giấc ngủ không đủ hoặc không tốt, hãy khuyên người dùng ngủ sớm hơn hoặc cải thiện giấc ngủ.
+        2. Nếu giấc ngủ tốt nhưng nhịp tim không ổn, hãy khuyên người dùng kiểm tra sức khoẻ hoặc gặp bác sĩ.
+        3. Nếu giấc ngủ ổn và nhịp tim bình thường, hãy khuyên người dùng duy trì thói quen này.
+        mẫu promt trả về sẽ như này:"tổng quan giấc ngủ của bạn..., Giờ đi ngủ của bạn..., các chỉ số giấc ngủ của bạn..., bạn nên ..."
+        `;
 
-    if (existingSleepData) {
+// Gọi OpenAIService để lấy lời khuyên
+        const advice = await this.openAIService.getAdvice(advicePrompt);
+        console.log(advice);
+        // Lưu kết quả sleep score vào bảng sleep_report
+        if (sleepScore != null) {
+            const sleepReport = this.sleepReportRepository.create({
+                user: { id: userId },
+                sleepData: { id: savedSleepData.id },
+                report_date: sleepStartTime.toISOString().split('T')[0],
+                sleep_quality: sleepQuality,
+                score: sleepScore,
+                advice
+            });
+    
+            await this.sleepReportRepository.save(sleepReport);
+        }
+    
         return {
-            dataSleep: existingSleepData,
+            dataSleep: savedSleepData,
+            dataPredict: {
+                sleepScore,
+                sleepQuality,
+                advice,
+            },
         };
     }
 
-    // Tiến hành tính toán và lưu trữ dữ liệu nếu có heartData và sleepData
-    const avgHeartRate = heartData.reduce((sum, h) => sum + h.value, 0) / heartData.length;
-    const maxHeartRate = Math.max(...heartData.map(h => h.value));
-    const minHeartRate = Math.min(...heartData.map(h => h.value));
-
-    const totalSleepTime = sleepData.reduce((sum, s) => {
-        const start = new Date(s.startDate).getTime();
-        const end = new Date(s.endDate).getTime();
-        return sum + (end - start) / (1000 * 60); 
-    }, 0);
-
-    const coreSleep = sleepData.filter(s => s.value === 'CORE').length * (totalSleepTime / sleepData.length);
-    const deepSleep = sleepData.filter(s => s.value === 'DEEP').length * (totalSleepTime / sleepData.length);
-    const remSleep = sleepData.filter(s => s.value === 'REM').length * (totalSleepTime / sleepData.length);
-
-    const coreSleepPercentage = (coreSleep / totalSleepTime) * 100;
-    const deepSleepPercentage = (deepSleep / totalSleepTime) * 100;
-    const remSleepPercentage = (remSleep / totalSleepTime) * 100;
-
-    const heartRateBelowRestingPercentage = heartData.filter(h => h.value < avgHeartRate).length / heartData.length * 100;
-
-    // Tạo bản ghi giấc ngủ mới và lưu vào database
-    const sleepRecord = this.sleepDataRepository.create({
-        user_id: userId,
-        total_time: totalSleepTime,
-        total_rem_sleep: remSleep,
-        total_deep_sleep: deepSleep,
-        heart_rate_below_resting_percentage: heartRateBelowRestingPercentage,
-        wake_up_time: wakeUpTime,
-        sleep_start_time: sleepStartTime,
-        heart_rate_avg: avgHeartRate,
-        core_sleep: coreSleep,
-        core_sleep_percentage: coreSleepPercentage,
-        deep_sleep: deepSleep,
-        deep_sleep_percentage: deepSleepPercentage,
-        max_heart_rate: maxHeartRate,
-        min_heart_rate: minHeartRate,
-        rem_sleep: remSleep,
-        rem_sleep_percentage: remSleepPercentage,
-    });
-
-    const savedSleepData = await this.sleepDataRepository.save(sleepRecord);
-
-    // Lưu dữ liệu nhịp tim và thời gian ngủ
-    const heartEntities = heartData.map(h => this.sleepHeartRepository.create({ ...h, sleepData: savedSleepData }));
-    await this.sleepHeartRepository.save(heartEntities);
-
-    const sleepEntities = sleepData.map(s => this.sleepTimeRepository.create({ ...s, sleepData: savedSleepData }));
-    await this.sleepTimeRepository.save(sleepEntities);
-
-    // Lấy điểm giấc ngủ từ API và lưu kết quả
-    const predictionData = {
-        "REM SLEEP": remSleepPercentage / 100,
-        "DEEP SLEEP": deepSleepPercentage / 100,
-        "HEART RATE BELOW RESTING": heartRateBelowRestingPercentage / 100,
-        "MINUTES of Sleep": totalSleepTime,
-    };
-
-    const sleepScoreResponse = await axios.post('http://127.0.0.1:5000/predict', predictionData);
-    const sleepScore = sleepScoreResponse.data.predictions[0]?.score;
-    const sleepQuality = sleepScoreResponse.data.predictions[0]?.quality;
-
-    const advicePrompt = `
-    Dưới đây là thông tin về giấc ngủ của người dùng:
-    - Tổng thời gian ngủ: ${totalSleepTime} phút
-    - Thời gian ngủ REM: ${remSleep} phút (${remSleepPercentage.toFixed(2)}%)
-    - Thời gian ngủ sâu (Deep Sleep): ${deepSleep} phút (${deepSleepPercentage.toFixed(2)}%)
-    - Nhịp tim trung bình: ${avgHeartRate} bpm
-    - Nhịp tim tối đa: ${maxHeartRate} bpm
-    - Nhịp tim tối thiểu: ${minHeartRate} bpm
-    - Tỷ lệ nhịp tim dưới mức nghỉ: ${heartRateBelowRestingPercentage.toFixed(2)}%
-    - Thời gian bắt đầu giấc ngủ: ${sleepStartTime.toISOString()}
-    - Thời gian thức dậy: ${wakeUpTime.toISOString()}
-    - Thời gian ngủ cốt lõi: ${coreSleep} phút (${coreSleepPercentage.toFixed(2)}%)
-    - Với điểm số giấc ngủ(theo chuẩn fitbit): ${sleepScore}
-    - Với đánh giá giấc ngủ(theo chuẩn fitbit): ${sleepQuality}
-    Dựa trên các dữ liệu trên, vui lòng đưa ra lời khuyên thật ngắn gọn nhất có thể khoảng 40 từ tập trung vào 3 vấn đề dưới đây:
-    1. Nếu giấc ngủ không đủ hoặc không tốt, hãy khuyên người dùng ngủ sớm hơn hoặc cải thiện giấc ngủ.
-    2. Nếu giấc ngủ tốt nhưng nhịp tim không ổn, hãy khuyên người dùng kiểm tra sức khoẻ hoặc gặp bác sĩ.
-    3. Nếu giấc ngủ ổn và nhịp tim bình thường, hãy khuyên người dùng duy trì thói quen này.
-    `;
-
-    const advice = await this.openAIService.getAdvice(advicePrompt);
-
-    // Lưu kết quả vào sleep_report
-    if (sleepScore != null) {
-        const sleepReport = this.sleepReportRepository.create({
-            user: { id: userId },
-            sleepData: { id: savedSleepData.id },
-            report_date: sleepStartTime.toISOString().split('T')[0],
-            sleep_quality: sleepQuality,
-            score: sleepScore,
-            advice
-        });
-
-        await this.sleepReportRepository.save(sleepReport);
-    }
-
-    return {
-        dataSleep: savedSleepData,
-        dataPredict: {
-            sleepScore,
-            sleepQuality,
-            advice,
-        },
-    };
-}
 
     
     async getSleepRecords(userId: number, days: number) {

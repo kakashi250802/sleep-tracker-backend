@@ -14,11 +14,13 @@ export class SleepController {
 
       @Body('heartData') heartData: CreateSleepHeartDto[],
       @Body('sleepData') sleepData: CreateSleepTimeDto[],
+      @Body('forceSleepTime') forceSleepTime: string,
+      @Body('forceWakeTime') forceWakeTime: string,
     @Request() req,
 
     ) {
         const userId = req.user.sub;
-      return this.sleepService.processAndSaveData(userId, heartData, sleepData);
+      return this.sleepService.processAndSaveData(userId, heartData, sleepData,forceSleepTime, forceWakeTime);
     }
 
     @Get('get-records/:days')
