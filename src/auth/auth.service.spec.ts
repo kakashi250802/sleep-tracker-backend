@@ -112,7 +112,7 @@ describe('AuthService', () => {
       const result = await authService.register(
         'test@example.com',
         'Test User',
-        '123456789',
+        '0362313328',
         'Password123!',
         new Date('2000-01-01'),
         70,
@@ -149,7 +149,7 @@ describe('AuthService', () => {
         authService.register(
           'test@example.com',
           'Test User',
-          'invalid-phone',
+          '9883312',
           'Password123!',
           new Date('2000-01-01'),
           70,
@@ -164,7 +164,7 @@ describe('AuthService', () => {
         authService.register(
           'test@example.com',
           'Test User',
-          '123456789',
+          '0362310321',
           '123',
           new Date('2000-01-01'),
           70,
@@ -181,7 +181,7 @@ describe('AuthService', () => {
         authService.register(
           'test@example.com',
           'Test User',
-          '123456789',
+          '0362310321',
           'Password123!',
           new Date('2000-01-01'),
           70,
@@ -190,7 +190,7 @@ describe('AuthService', () => {
         )
       ).rejects.toThrow(BadRequestException);
 
-      expect(mockUserRepository.findOne).toHaveBeenCalledTimes(1);
+      expect(mockUserRepository.findOne).toHaveBeenCalledTimes(2); // Check that it was called twice, once for email, once for phone
     });
 
     it('should throw BadRequestException if phone number is already used', async () => {
@@ -200,7 +200,7 @@ describe('AuthService', () => {
         authService.register(
           'test@example.com',
           'Test User',
-          '123456789',
+          '0362310321',
           'Password123!',
           new Date('2000-01-01'),
           70,
@@ -209,7 +209,7 @@ describe('AuthService', () => {
         )
       ).rejects.toThrow(BadRequestException);
 
-      expect(mockUserRepository.findOne).toHaveBeenCalledTimes(1);
+      expect(mockUserRepository.findOne).toHaveBeenCalledTimes(2); // Check that it was called twice, once for email, once for phone
     });
   });
 });

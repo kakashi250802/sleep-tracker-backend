@@ -14,8 +14,8 @@ export class SleepController {
 
       @Body('heartData') heartData: CreateSleepHeartDto[],
       @Body('sleepData') sleepData: CreateSleepTimeDto[],
-      @Body('forceSleepTime') forceSleepTime: string,
-      @Body('forceWakeTime') forceWakeTime: string,
+      @Body('forceSleepTime') forceSleepTime: string="",
+      @Body('forceWakeTime') forceWakeTime: string="",
     @Request() req,
 
     ) {

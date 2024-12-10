@@ -32,8 +32,8 @@ export class SleepService {
         userId: number,
         heartData: CreateSleepHeartDto[],
         sleepData: CreateSleepTimeDto[],
-        forceSleepTime:string,
-        forceWakeTime:string,
+        forceSleepTime?:string,
+        forceWakeTime?:string,
     ) {
         // // Kiểm tra đầu vào
         // if (!heartData || heartData.length === 0) {
